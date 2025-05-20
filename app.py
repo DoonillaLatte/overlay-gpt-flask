@@ -28,7 +28,7 @@ class PromptRequest(BaseModel):
     target_program: ProgramInfo
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True, async_mode='threading')
 prompt_factory = PromptFactory()
 
 @socketio.on('connect')
@@ -152,4 +152,4 @@ def index():
 
 if __name__ == '__main__':
     logger.info("Starting Flask application...")
-    socketio.run(app, debug=True, port=5000)
+    socketio.run(app, debug=True, port=5000, host='0.0.0.0')
