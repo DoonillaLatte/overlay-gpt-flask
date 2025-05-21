@@ -44,6 +44,9 @@ def handle_message(message):
     try:
         logger.info(f'Received message: {message}')
         
+        if isinstance(message, str):
+            message = json.loads(message)
+        
         # JSON 형식 검증
         if isinstance(message, dict) and 'command' in message:
             command = message['command']
@@ -74,22 +77,26 @@ def handle_message(message):
                     response = strategy.generate_prompt(request.dict())
                     
                     socketio.emit('message_response', {
+                        'command': 'response_single_generated_response',
                         'message': response,
                         'status': 'success'
                     })
                 except Exception as e:
                     socketio.emit('message_response', {
+                        'command': 'response_single_generated_response',
                         'message': f'프롬프트 처리 중 오류 발생: {str(e)}',
                         'status': 'error'
                     })
             else:
                 socketio.emit('message_response', {
+                    'command': 'response_single_generated_response',
                     'message': f'지원하지 않는 명령어입니다: {command}',
                     'status': 'error'
                 })
         else:
             # 일반 메시지 처리
             socketio.emit('message_response', {
+                'command': 'response_single_generated_response',
                 'message': message,
                 'status': 'success'
             })
@@ -103,48 +110,48 @@ def handle_message(message):
         })
         logger.debug("Error response sent")
 
-@socketio.on('prompt_request')
-def handle_prompt_request(data: Dict[str, Any]):
-    try:
-        logger.debug(f"Raw request data: {data}")
+# @socketio.on('prompt_request')
+# def handle_prompt_request(data: Dict[str, Any]):
+#     try:
+#         logger.debug(f"Raw request data: {data}")
         
-        # 데이터 검증
-        request = PromptRequest(**data)
-        logger.info(f"Received prompt request: {request.dict()}")
+#         # 데이터 검증
+#         request = PromptRequest(**data)
+#         logger.info(f"Received prompt request: {request.dict()}")
         
-        # request_type에 따라 적절한 프롬프트 전략 선택
-        strategy_name = {
-            1: "explain",
-            2: "freestyle",
-            3: "generate_text",
-            4: "summary"
-        }.get(request.request_type, "explain")
+#         # request_type에 따라 적절한 프롬프트 전략 선택
+#         strategy_name = {
+#             1: "explain",
+#             2: "freestyle",
+#             3: "generate_text",
+#             4: "summary"
+#         }.get(request.request_type, "explain")
         
-        logger.info(f"Selected strategy: {strategy_name}")
+#         logger.info(f"Selected strategy: {strategy_name}")
         
-        # 프롬프트 전략 생성 및 실행
-        strategy = prompt_factory.get_strategy(strategy_name)
-        response = strategy.generate_prompt(request.dict())
+#         # 프롬프트 전략 생성 및 실행
+#         strategy = prompt_factory.get_strategy(strategy_name)
+#         response = strategy.generate_prompt(request.dict())
         
-        logger.info(f"Generated response for chat_id: {request.chat_id}")
+#         logger.info(f"Generated response for chat_id: {request.chat_id}")
         
-        # 응답 전송
-        socketio.emit('prompt_response', {
-            'chat_id': request.chat_id,
-            'response': response,
-            'status': 'success'
-        })
-        logger.debug("Response sent successfully")
+#         # 응답 전송
+#         socketio.emit('prompt_response', {
+#             'chat_id': request.chat_id,
+#             'response': response,
+#             'status': 'success'
+#         })
+#         logger.debug("Response sent successfully")
         
-    except Exception as e:
-        logger.error(f"Error processing request: {str(e)}", exc_info=True)
-        # 에러 발생 시 에러 메시지 전송
-        socketio.emit('prompt_response', {
-            'chat_id': data.get('chat_id', -1),
-            'response': str(e),
-            'status': 'error'
-        })
-        logger.debug("Error response sent")
+#     except Exception as e:
+#         logger.error(f"Error processing request: {str(e)}", exc_info=True)
+#         # 에러 발생 시 에러 메시지 전송
+#         socketio.emit('prompt_response', {
+#             'chat_id': data.get('chat_id', -1),
+#             'response': str(e),
+#             'status': 'error'
+#         })
+#         logger.debug("Error response sent")
 
 @app.route('/')
 def index():
@@ -152,4 +159,4 @@ def index():
 
 if __name__ == '__main__':
     logger.info("Starting Flask application...")
-    socketio.run(app, debug=True, port=5000, host='0.0.0.0')
+    socketio.run(app, debug=True, port=5001, host='0.0.0.0')
