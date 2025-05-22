@@ -6,6 +6,10 @@ import logging
 from typing import Dict, Any
 from pydantic import BaseModel, Field
 from services.vector_db_service import VectorDBService
+from services.excel_service import ExcelService
+import base64
+import pandas as pd
+from io import BytesIO
 
 # 로깅 설정
 logging.basicConfig(
@@ -57,6 +61,44 @@ def handle_message(message):
             content = message.get('content', {})
             target_program = message.get('target_program', None)
             current_program = message.get('current_program', None)
+            
+            # 파일 데이터가 있는 경우 엑셀 데이터 읽기
+            if 'file_data' in message:
+                file_data = message['file_data']
+                if file_data.get('content_type') == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                    logger.info(f"엑셀 파일 처리 시작: {file_data.get('filename')}")
+                    try:
+                        # base64로 인코딩된 엑셀 데이터를 디코딩
+                        excel_content = base64.b64decode(file_data.get('content'))
+                        # BytesIO 객체로 변환
+                        excel_file = BytesIO(excel_content)
+                        # ExcelService를 사용하여 데이터 읽기
+                        df = ExcelService.read_excel_data(excel_file)
+                        if df is not None:
+                            logger.info(f"엑셀 데이터 읽기 성공. 데이터 크기: {df.shape}")
+                            logger.info(f"컬럼 목록: {df.columns.tolist()}")
+                            # 데이터 요약 정보 생성
+                            summary = ExcelService.get_excel_summary(df)
+                            logger.info(f"엑셀 데이터 요약:\n{json.dumps(summary, indent=2, ensure_ascii=False)}")
+                            socketio.emit('message_response', {
+                                'command': 'excel_summary',
+                                'summary': summary,
+                                'status': 'success'
+                            })
+                        else:
+                            logger.error("엑셀 데이터 읽기 실패")
+                            socketio.emit('message_response', {
+                                'command': 'excel_summary',
+                                'message': '엑셀 파일을 읽는 중 오류가 발생했습니다.',
+                                'status': 'error'
+                            })
+                    except Exception as e:
+                        logger.error(f"엑셀 파일 처리 중 오류 발생: {str(e)}")
+                        socketio.emit('message_response', {
+                            'command': 'excel_summary',
+                            'message': f'엑셀 파일 처리 중 오류가 발생했습니다: {str(e)}',
+                            'status': 'error'
+                        })
             
             if target_program is None:
                 if command == 'request_single_generated_response':
@@ -208,4 +250,4 @@ def index():
 
 if __name__ == '__main__':
     logger.info("Starting Flask application...")
-    socketio.run(app, debug=True, port=5000, host='0.0.0.0')
+    socketio.run(app, debug=True, port=5001, host='0.0.0.0')
