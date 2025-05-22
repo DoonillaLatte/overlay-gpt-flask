@@ -100,89 +100,91 @@ def handle_message(message):
                         'message': f'지원하지 않는 명령어입니다: {command}',
                         'status': 'error'
                     })
-            # else:
-            #     # 다중 프로그램 프롬프트 요청 처리
-            #     try:
-            #         # content 객체 생성
-            #         content = {
-            #             'chat_id': message.get('chat_id'),
-            #             'prompt': message.get('prompt'),
-            #             'request_type': message.get('request_type'),
-            #             'description': message.get('description'),
-            #             'current_program': message.get('current_program'),
-            #             'target_program': message.get('target_program')
-            #         }
-                    
-            #         request = PromptRequest(**content)
-            #         #파일 식별번호
-            #         multi_program_id = request.target_program.id
-            #         #파일 타입
-            #         multi_program_type = request.target_program.type
-            #         #파일 컨텍스트
-            #         multi_program_context = request.target_program.context
-                    
-            #         # 벡터 데이터베이스에 프로그램 정보 저장
-            #         try:
-            #             vector_db_service.store_program_info(
-            #                 program_id=multi_program_id,
-            #                 program_type=multi_program_type,
-            #                 program_context=multi_program_context
-            #             )
-            #         except Exception as e:
-            #             logger.error(f"벡터 DB 저장 중 오류 발생: {str(e)}")
-            #             raise
-                    
-            #         # 유사한 프로그램 검색
-            #         try:
-            #             similar_programs = vector_db_service.search_similar_programs(
-            #                 query=multi_program_context,
-            #                 k=5
-            #             )
-            #             logger.info(f"유사한 프로그램 검색 완료. 결과 수: {len(similar_programs)}")
+            else:
+                # 다중 프로그램 프롬프트 요청 처리
+                if command == 'search_similar_context':
+                    try:
+                        # content 객체 생성
+                        content = {
+                            'chat_id': message.get('chat_id'),
+                            'prompt': message.get('prompt'),
+                            'request_type': message.get('request_type'),
+                            'description': message.get('description'),
+                            'current_program': message.get('current_program'),
+                            'target_program': message.get('target_program')
+                        }
                         
-            #             # 검색된 프로그램 정보 출력
-            #             for program in similar_programs:
-            #                 logger.info(f"유사한 프로그램: ID={program['id']}, 타입={program['type']}, 컨텍스트={program['context']}")
+                        request = PromptRequest(**content)
+                        #파일 식별번호
+                        multi_program_id = request.target_program.id
+                        #파일 타입
+                        multi_program_type = request.target_program.type
+                        #파일 컨텍스트
+                        multi_program_context = request.target_program.context
                         
-            #         except Exception as e:
-            #             logger.error(f"유사한 프로그램 검색 중 오류 발생: {str(e)}")
-            #             raise
-                    
-            #         # 검색된 프로그램 정보를 프롬프트에 포함
-            #         prompt_with_similar_programs = f"{request.prompt}\n\n유사한 프로그램:\n{similar_programs}"
-                    
-            #         # 프롬프트 요청 처리
-            #         try:
-            #             strategy = prompt_factory.get_strategy(request.request_type)
-            #             response = strategy.generate_prompt(request.dict())
+                        # 벡터 데이터베이스에 프로그램 정보 저장
+                        try:
+                            vector_db_service.store_program_info(
+                                program_id=multi_program_id,
+                                program_type=multi_program_type,
+                                program_context=multi_program_context
+                            )
+                        except Exception as e:
+                            logger.error(f"벡터 DB 저장 중 오류 발생: {str(e)}")
+                            raise
                         
-            #             socketio.emit('message_response', {
-            #                 'command': 'response_single_generated_response',
-            #                 'message': response,
-            #                 'status': 'success'
-            #             })
-            #         except Exception as e:
-            #             socketio.emit('message_response', {
-            #                 'command': 'response_single_generated_response',
-            #                 'message': f'프롬프트 처리 중 오류 발생: {str(e)}',
-            #                 'status': 'error'
-            #             })
+                        # 유사한 프로그램 검색
+                        try:
+                            similar_programs = vector_db_service.search_similar_programs(
+                                query=multi_program_context,
+                                k=5
+                            )
+                            logger.info(f"유사한 프로그램 검색 완료. 결과 수: {len(similar_programs)}")
+                            
+                            # 검색된 프로그램 정보 출력
+                            for program in similar_programs:
+                                logger.info(f"유사한 프로그램: ID={program['id']}, 타입={program['type']}, 컨텍스트={program['context']}")
+                            
+                        except Exception as e:
+                            logger.error(f"유사한 프로그램 검색 중 오류 발생: {str(e)}")
+                            raise
+                        
+                        # 검색된 프로그램 정보를 프롬프트에 포함
+                        # 유사한 프로그램의 ID 리스트 추출
+                        similar_program_ids = [program['id'] for program in similar_programs]
+                        
+                        # ID 리스트를 포함한 응답 전송
+                        socketio.emit('message_response', {
+                            'command': 'search_similar_context',
+                            'similar_program_ids': similar_program_ids,
+                            'status': 'success'
+                        })
+                        
+                    except Exception as e:
+                        socketio.emit('message_response', {
+                            'command': 'search_similar_context',
+                            'message': f'유사한 프로그램 검색 중 오류 발생: {str(e)}',
+                            'status': 'error'
+                        })
+                        
+                elif command == 'run_convert_prompt':
+                    # 프롬프트 요청 처리
+                    try:
+                        strategy = prompt_factory.get_strategy(request.request_type)
+                        response = strategy.generate_prompt(request.dict())
+                        
+                        socketio.emit('message_response', {
+                            'command': 'response_multiple_generated_response',
+                            'message': response,
+                            'status': 'success'
+                        })
+                    except Exception as e:
+                        socketio.emit('message_response', {
+                            'command': 'response_multiple_generated_response',
+                            'message': f'프롬프트 처리 중 오류 발생: {str(e)}',
+                            'status': 'error'
+                        })
                     
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-            #     except Exception as e:
-            #         socketio.emit('message_response', {
-            #             'command': 'response_single_generated_response',
-            #             'message': f'프롬프트 처리 중 오류 발생: {str(e)}',
-            #             'status': 'error'
-            #         })
         else:
             # 일반 메시지 처리
             socketio.emit('message_response', {
