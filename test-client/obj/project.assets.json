@@ -1,0 +1,342 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "SocketIO.Core/3.1.2": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/SocketIO.Core.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/SocketIO.Core.dll": {}
+        }
+      },
+      "SocketIO.Serializer.Core/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "SocketIO.Core": "3.1.2"
+        },
+        "compile": {
+          "lib/netstandard2.0/SocketIO.Serializer.Core.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/SocketIO.Serializer.Core.dll": {}
+        }
+      },
+      "SocketIO.Serializer.SystemTextJson/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "SocketIO.Core": "3.1.2",
+          "SocketIO.Serializer.Core": "3.1.2",
+          "System.Text.Json": "8.0.4"
+        },
+        "compile": {
+          "lib/netstandard2.0/SocketIO.Serializer.SystemTextJson.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/SocketIO.Serializer.SystemTextJson.dll": {}
+        }
+      },
+      "SocketIOClient/3.1.2": {
+        "type": "package",
+        "dependencies": {
+          "SocketIO.Serializer.Core": "3.1.2",
+          "SocketIO.Serializer.SystemTextJson": "3.1.2"
+        },
+        "compile": {
+          "lib/net6.0/SocketIOClient.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/SocketIOClient.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "System.Text.Encodings.Web/8.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/System.Text.Encodings.Web.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/System.Text.Encodings.Web.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/browser/lib/net8.0/System.Text.Encodings.Web.dll": {
+            "assetType": "runtime",
+            "rid": "browser"
+          }
+        }
+      },
+      "System.Text.Json/8.0.4": {
+        "type": "package",
+        "dependencies": {
+          "System.Text.Encodings.Web": "8.0.0"
+        },
+        "compile": {
+          "lib/net8.0/System.Text.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/System.Text.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/System.Text.Json.targets": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SocketIO.Core/3.1.2": {
+      "sha512": "tb6vZ7DYhZooRGLHTPK7/Gifbu+kHbkQRbsee0LAnI28pWc5+Br+juh4pvid3kfIrGTl5dzAfy5huLELVU4svA==",
+      "type": "package",
+      "path": "socketio.core/3.1.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/SocketIO.Core.dll",
+        "socketio.core.3.1.2.nupkg.sha512",
+        "socketio.core.nuspec"
+      ]
+    },
+    "SocketIO.Serializer.Core/3.1.2": {
+      "sha512": "/cJtU3JVzjqP/Jh3BpMMR0aNzYua6s9e3+hjZ6OnYprFHrGYyg/n9OcST1dBjmOvvgyJ3GwJlyq0NjnPETAHsA==",
+      "type": "package",
+      "path": "socketio.serializer.core/3.1.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/SocketIO.Serializer.Core.dll",
+        "socketio.serializer.core.3.1.2.nupkg.sha512",
+        "socketio.serializer.core.nuspec"
+      ]
+    },
+    "SocketIO.Serializer.SystemTextJson/3.1.2": {
+      "sha512": "AA8w3Y4JldC3FaL1D4WuyG4zLPdrzjf8AQx1LCKtzlMlTLOcbEW0UGt+BhKxkUnxYAD5O5fsqRrTNCGXu6VeWA==",
+      "type": "package",
+      "path": "socketio.serializer.systemtextjson/3.1.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/SocketIO.Serializer.SystemTextJson.dll",
+        "socketio.serializer.systemtextjson.3.1.2.nupkg.sha512",
+        "socketio.serializer.systemtextjson.nuspec"
+      ]
+    },
+    "SocketIOClient/3.1.2": {
+      "sha512": "CMmnmhvG1Qf8k6BPh3RLqc/9MNvGUlCOyptjoP8a62bowPQkHTWvN25yy+gQqx5Ry/NgzkQHBJNpmRJhZNZrVQ==",
+      "type": "package",
+      "path": "socketioclient/3.1.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net462/SocketIOClient.dll",
+        "lib/net462/SocketIOClient.xml",
+        "lib/net6.0/SocketIOClient.dll",
+        "lib/net6.0/SocketIOClient.xml",
+        "lib/netstandard2.0/SocketIOClient.dll",
+        "lib/netstandard2.0/SocketIOClient.xml",
+        "socketioclient.3.1.2.nupkg.sha512",
+        "socketioclient.nuspec"
+      ]
+    },
+    "System.Text.Encodings.Web/8.0.0": {
+      "sha512": "yev/k9GHAEGx2Rg3/tU6MQh4HGBXJs70y7j1LaM1i/ER9po+6nnQ6RRqTJn1E7Xu0fbIFK80Nh5EoODxrbxwBQ==",
+      "type": "package",
+      "path": "system.text.encodings.web/8.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.Text.Encodings.Web.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Text.Encodings.Web.targets",
+        "lib/net462/System.Text.Encodings.Web.dll",
+        "lib/net462/System.Text.Encodings.Web.xml",
+        "lib/net6.0/System.Text.Encodings.Web.dll",
+        "lib/net6.0/System.Text.Encodings.Web.xml",
+        "lib/net7.0/System.Text.Encodings.Web.dll",
+        "lib/net7.0/System.Text.Encodings.Web.xml",
+        "lib/net8.0/System.Text.Encodings.Web.dll",
+        "lib/net8.0/System.Text.Encodings.Web.xml",
+        "lib/netstandard2.0/System.Text.Encodings.Web.dll",
+        "lib/netstandard2.0/System.Text.Encodings.Web.xml",
+        "runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll",
+        "runtimes/browser/lib/net6.0/System.Text.Encodings.Web.xml",
+        "runtimes/browser/lib/net7.0/System.Text.Encodings.Web.dll",
+        "runtimes/browser/lib/net7.0/System.Text.Encodings.Web.xml",
+        "runtimes/browser/lib/net8.0/System.Text.Encodings.Web.dll",
+        "runtimes/browser/lib/net8.0/System.Text.Encodings.Web.xml",
+        "system.text.encodings.web.8.0.0.nupkg.sha512",
+        "system.text.encodings.web.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "System.Text.Json/8.0.4": {
+      "sha512": "bAkhgDJ88XTsqczoxEMliSrpijKZHhbJQldhAmObj/RbrN3sU5dcokuXmWJWsdQAhiMJ9bTayWsL1C9fbbCRhw==",
+      "type": "package",
+      "path": "system.text.json/8.0.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "analyzers/dotnet/roslyn3.11/cs/System.Text.Json.SourceGeneration.dll",
+        "analyzers/dotnet/roslyn3.11/cs/cs/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/de/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/es/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/fr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/it/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ja/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ko/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pl/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pt-BR/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ru/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/tr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hans/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hant/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/System.Text.Json.SourceGeneration.dll",
+        "analyzers/dotnet/roslyn4.0/cs/cs/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/de/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/es/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/fr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/it/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ja/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ko/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pl/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pt-BR/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ru/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/tr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hans/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hant/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/System.Text.Json.SourceGeneration.dll",
+        "analyzers/dotnet/roslyn4.4/cs/cs/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/de/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/es/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/fr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/it/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ja/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ko/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pl/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pt-BR/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ru/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/tr/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hans/System.Text.Json.SourceGeneration.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hant/System.Text.Json.SourceGeneration.resources.dll",
+        "buildTransitive/net461/System.Text.Json.targets",
+        "buildTransitive/net462/System.Text.Json.targets",
+        "buildTransitive/net6.0/System.Text.Json.targets",
+        "buildTransitive/netcoreapp2.0/System.Text.Json.targets",
+        "buildTransitive/netstandard2.0/System.Text.Json.targets",
+        "lib/net462/System.Text.Json.dll",
+        "lib/net462/System.Text.Json.xml",
+        "lib/net6.0/System.Text.Json.dll",
+        "lib/net6.0/System.Text.Json.xml",
+        "lib/net7.0/System.Text.Json.dll",
+        "lib/net7.0/System.Text.Json.xml",
+        "lib/net8.0/System.Text.Json.dll",
+        "lib/net8.0/System.Text.Json.xml",
+        "lib/netstandard2.0/System.Text.Json.dll",
+        "lib/netstandard2.0/System.Text.Json.xml",
+        "system.text.json.8.0.4.nupkg.sha512",
+        "system.text.json.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "SocketIOClient >= 3.1.2"
+    ]
+  },
+  "packageFolders": {
+    "/Users/cuhun/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/Users/cuhun/Desktop/OverlayGPT/test-client/test-client.csproj",
+      "projectName": "test-client",
+      "projectPath": "/Users/cuhun/Desktop/OverlayGPT/test-client/test-client.csproj",
+      "packagesPath": "/Users/cuhun/.nuget/packages/",
+      "outputPath": "/Users/cuhun/Desktop/OverlayGPT/test-client/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/Users/cuhun/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.200"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "dependencies": {
+          "SocketIOClient": {
+            "target": "Package",
+            "version": "[3.1.2, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[9.0.3, 9.0.3]"
+          }
+        ],
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.202/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
