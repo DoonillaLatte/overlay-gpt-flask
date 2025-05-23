@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT Overlay</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .message-form {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .message-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .send-button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .send-button:hover {
+            background-color: #0056b3;
+        }
+        .message-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .message-item.success {
+            border-left: 4px solid #28a745;
+        }
+        .message-item.error {
+            border-left: 4px solid #dc3545;
+        }
+        .example-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .example-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GPT Overlay</h1>
+        <div id="status" class="status disconnected">연결 상태: 연결되지 않음</div>
+        <form id="messageForm" class="message-form">
+            <input type="text" id="messageInput" class="message-input" placeholder="메시지를 입력하세요...">
+            <button type="submit" class="send-button">전송</button>
+        </form>
+        <button id="exampleButton" class="example-button">예시 프롬프트 보내기</button>
+        <div id="messageList" class="message-list"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const statusDiv = document.getElementById('status');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const messageList = document.getElementById('messageList');
+        const exampleButton = document.getElementById('exampleButton');
+
+        socket.on('connect', () => {
+            statusDiv.textContent = '연결 상태: 연결됨';
+            statusDiv.className = 'status connected';
+        });
+
+        socket.on('disconnect', () => {
+            statusDiv.textContent = '연결 상태: 연결되지 않음';
+            statusDiv.className = 'status disconnected';
+        });
+
+        socket.on('message_response', (data) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-item ${data.status}`;
+            messageDiv.textContent = data.message;
+            messageList.appendChild(messageDiv);
+            messageList.scrollTop = messageList.scrollHeight;
+        });
+
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (message) {
+                try {
+                    // JSON 형식인지 확인
+                    const jsonMessage = JSON.parse(message);
+                    socket.emit('message', jsonMessage);
+                } catch (e) {
+                    // 일반 텍스트 메시지로 전송
+                    socket.emit('message', message);
+                }
+                messageInput.value = '';
+            }
+        });
+
+        exampleButton.addEventListener('click', () => {
+            const examplePrompt = {
+                command: "send_user_prompt",
+                content: {
+                    chat_id: 1,
+                    prompt: "안녕하세요",
+                    request_type: 1,
+                    description: "테스트 메시지입니다",
+                    current_program: {
+                        id: 1,
+                        type: "test",
+                        context: "테스트 컨텍스트"
+                    },
+                    target_program: {
+                        id: 2,
+                        type: "test",
+                        context: "테스트 컨텍스트"
+                    }
+                }
+            };
+            socket.emit('message', examplePrompt);
+        });
+    </script>
+</body>
+</html> 
