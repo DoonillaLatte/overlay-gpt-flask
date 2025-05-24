@@ -80,7 +80,7 @@ def handle_message(message):
                             # 데이터 요약 정보 생성
                             summary = ExcelService.get_excel_summary(df)
                             logger.info(f"엑셀 데이터 요약:\n{json.dumps(summary, indent=2, ensure_ascii=False)}")
-                            socketio.emit('message_response', {
+                            socketio.emit('message_response',  {
                                 'command': 'excel_summary',
                                 'summary': summary,
                                 'status': 'success'
@@ -182,10 +182,10 @@ def handle_message(message):
                                 k=5
                             )
                             logger.info(f"유사한 프로그램 검색 완료. 결과 수: {len(similar_programs)}")
-                            
+                            print(similar_programs)
                             # 검색된 프로그램 정보 출력
                             for program in similar_programs:
-                                logger.info(f"유사한 프로그램: ID={program['id']}, 타입={program['type']}, 컨텍스트={program['context']}")
+                                logger.info(f"유사한 프로그램: ID={program['id']}, 타입={program['metadata']['type']}, 컨텍스트={program['metadata']['context']}")
                             
                         except Exception as e:
                             logger.error(f"유사한 프로그램 검색 중 오류 발생: {str(e)}")
