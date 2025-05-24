@@ -3,11 +3,12 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 import os
-api_key = os.getenv("OPENAI_API_KEY")
-from registry import register_prompt
+from ..prompt_strategy import PromptStrategy
+import logging
 
-@register_prompt("generate_text")
-class GenerateTextPrompt():
+logger = logging.getLogger(__name__)
+
+class GenerateTextPrompt(PromptStrategy):
     def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None, suffix: Optional[str] = None):
         """
         프롬프트 생성을 위한 클래스 초기화
@@ -49,7 +50,7 @@ class GenerateTextPrompt():
         ])
         
         llm = ChatOpenAI(model="gpt-4",
-                         api_key=api_key,
+                         api_key=os.getenv("OPENAI_API_KEY"),
                          temperature=0.5
                          )
         

@@ -3,11 +3,14 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 import os
-from registry import register_prompt
+from ..prompt_strategy import PromptStrategy
+import logging
+
+logger = logging.getLogger(__name__)
+
 api_key = os.getenv("OPENAI_API_KEY")
 
-@register_prompt("freestyle")
-class FreestylePrompt():
+class FreestylePrompt(PromptStrategy):
     def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None, suffix: Optional[str] = None):
         """
         프롬프트 생성을 위한 클래스 초기화

@@ -3,7 +3,10 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 import os
+import logging
 from registry import register_prompt
+logger = logging.getLogger(__name__)
+
 api_key = os.getenv("OPENAI_API_KEY")
 
 @register_prompt("explain")

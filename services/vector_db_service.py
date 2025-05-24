@@ -1,12 +1,22 @@
 from typing import Dict, Any, List
 import logging
-from vector_database import VectorDatabase
+from databases.vector_database import VectorDatabase
+import os
 
 logger = logging.getLogger(__name__)
 
 class VectorDBService:
-    def __init__(self):
-        self._vector_db = VectorDatabase()
+    def __init__(self, storage_dir: str = "vector_db"):
+        """
+        VectorDBService를 초기화합니다.
+        
+        Args:
+            storage_dir (str): 벡터 데이터베이스 저장 디렉토리 (기본값: "vector_db")
+        """
+        self.storage_dir = storage_dir
+        # 저장 디렉토리가 없으면 생성
+        os.makedirs(storage_dir, exist_ok=True)
+        self._vector_db = VectorDatabase(storage_dir=storage_dir)
 
     def store_program_info(self, program_id: int, program_type: str, program_context: str) -> None:
         """

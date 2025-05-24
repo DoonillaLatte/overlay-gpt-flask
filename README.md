@@ -5,7 +5,8 @@ python3 -m venv venv
 
 #가상환경 진입(windows)
 .\venv\Scripts\activate
-#가상환경 진입 안될 시
+
+#가상환경 진입 안될 시(Windows)
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 #가상환경 진입(mac)
