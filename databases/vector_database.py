@@ -1,12 +1,12 @@
 import numpy as np
 import faiss
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from sentence_transformers import SentenceTransformer
 import logging
 import os
 import json
 import pickle
-from openai import OpenAI
+from datetime import datetime
 from dotenv import load_dotenv
 
 # 환경 변수 로드
@@ -15,220 +15,202 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 class VectorDatabase:
-    def __init__(self, dimension: int = 768, storage_dir: str = "vector_db"):
+    def __init__(self, dimension: int = 768, storage_dir: str = "vector_db", model_name: str = "jhgan/ko-sroberta-multitask"):
         """
         벡터 데이터베이스를 초기화합니다.
         
         Args:
             dimension (int): 벡터의 차원 수 (기본값: 768)
             storage_dir (str): 벡터 데이터베이스 저장 디렉토리 (기본값: "vector_db")
+            model_name (str): 사용할 임베딩 모델 이름 (기본값: "jhgan/ko-sroberta-multitask")
         """
+        if dimension <= 0:
+            raise ValueError("차원 수는 양수여야 합니다.")
+            
         self.dimension = dimension
         self.storage_dir = storage_dir
         self.index_path = os.path.join(storage_dir, "faiss_index.bin")
         self.metadata_path = os.path.join(storage_dir, "metadata.json")
+        self.id_map_path = os.path.join(storage_dir, "id_map.pkl")
         
-        # OpenAI 클라이언트 초기화
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        
-        # 저장 디렉토리가 없으면 생성
+        # 디렉토리 생성
         os.makedirs(storage_dir, exist_ok=True)
         
-        # 기존 인덱스가 있으면 로드, 없으면 새로 생성
-        if os.path.exists(self.index_path):
-            self.index = faiss.read_index(self.index_path)
-            with open(self.metadata_path, 'r', encoding='utf-8') as f:
-                self.metadata_store = json.load(f)
-        else:
-            self.index = faiss.IndexFlatL2(dimension)
-            self.metadata_store = {}
-            
-        # 한국어 텍스트에 최적화된 모델 사용
-        self.model = SentenceTransformer('jhgan/ko-sroberta-multitask')
-
-    def _generate_title(self, text: str, max_words: int = 5) -> str:
-        """
-        텍스트의 내용을 대표하는 간단한 제목을 생성합니다.
-        
-        Args:
-            text (str): 원본 텍스트
-            max_words (int): 제목의 최대 단어 수 (기본값: 5)
-            
-        Returns:
-            str: 생성된 제목
-        """
+        # 임베딩 모델 초기화
         try:
-            prompt = f"""다음 텍스트의 내용을 가장 잘 표현하는 간단한 제목을 만들어주세요.
-            
-            조건:
-            1. 최대 {max_words}개의 단어로 구성
-            2. 명사구나 짧은 문장 형태로 작성
-            3. 텍스트의 핵심 의도나 목적을 포함
-            4. 가능한 한 구체적으로 표현
-            5. 제목만 출력 (다른 설명 없이)
-            
-            텍스트:
-            {text}
-            
-            제목:"""
-
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "당신은 텍스트의 핵심을 정확하게 파악하여 간단한 제목으로 만드는 전문가입니다."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.3,
-                max_tokens=50
-            )
-
-            # 응답에서 제목 추출 및 정리
-            title = response.choices[0].message.content.strip()
-            logger.info(f"생성된 제목: {title}")
-            return title
-            
+            self.model = SentenceTransformer(model_name)
+            actual_dim = self.model.get_sentence_embedding_dimension()
+            if actual_dim != dimension:
+                raise ValueError(f"모델의 임베딩 차원({actual_dim})이 지정된 차원({dimension})과 다릅니다.")
         except Exception as e:
-            logger.error(f"제목 생성 중 오류 발생: {str(e)}")
-            return ""
-        
-    def _save_to_disk(self) -> None:
-        """
-        벡터 데이터베이스를 디스크에 저장합니다.
-        """
-        try:
-            # FAISS 인덱스 저장
-            faiss.write_index(self.index, self.index_path)
-            
-            # 메타데이터 저장
-            with open(self.metadata_path, 'w', encoding='utf-8') as f:
-                json.dump(self.metadata_store, f, ensure_ascii=False, indent=2)
-                
-            logger.info(f"벡터 데이터베이스가 {self.storage_dir}에 저장되었습니다.")
-        except Exception as e:
-            logger.error(f"벡터 데이터베이스 저장 중 오류 발생: {str(e)}")
+            logger.error(f"임베딩 모델 초기화 실패: {str(e)}")
             raise
-        
-    def _get_embedding(self, text: str) -> np.ndarray:
-        """
-        텍스트를 벡터로 변환합니다.
-        
-        Args:
-            text (str): 변환할 텍스트
             
-        Returns:
-            np.ndarray: 변환된 벡터
-        """
-        try:
-            embedding = self.model.encode(text)
-            return embedding.reshape(1, -1).astype('float32')
-        except Exception as e:
-            logger.error(f"텍스트 임베딩 중 오류 발생: {str(e)}")
-            raise
+        # FAISS 인덱스 초기화
+        self.index = faiss.IndexFlatL2(dimension)
+        self.metadata: Dict[int, Dict[str, Any]] = {}
+        self.id_to_index: Dict[int, int] = {}
+        self.next_index = 0
         
-    def store_vector(self, id: int, text: str, metadata: Dict[str, Any]) -> None:
-        """
-        벡터를 저장합니다.
-        
-        Args:
-            id (int): 벡터 ID
-            text (str): 텍스트 데이터
-            metadata (Dict[str, Any]): 메타데이터
-        """
-        # 텍스트에서 제목 생성
-        title = self._generate_title(text)
-        
-        # 제목과 원본 텍스트를 결합하여 벡터화
-        combined_text = f"{title} {text}"
-        vector = self._get_embedding(combined_text)
-        
-        # 벡터 저장
-        self.index.add(vector)
-        
-        # 메타데이터 저장 (제목 정보 포함)
-        self.metadata_store[id] = {
-            "text": text,
-            "title": title,
-            "metadata": metadata
-        }
-        
-        # 디스크에 저장
-        self._save_to_disk()
-        
-    def get_vector(self, id: int) -> Dict[str, Any]:
-        """
-        벡터를 조회합니다.
-        
-        Args:
-            id (int): 벡터 ID
-            
-        Returns:
-            Dict[str, Any]: 저장된 벡터 데이터
-        """
-        if id not in self.metadata_store:
-            raise KeyError(f"ID {id}에 해당하는 벡터가 존재하지 않습니다.")
-            
-        return self.metadata_store[id]
-        
-    def delete_vector(self, id: int) -> None:
-        """
-        벡터를 삭제합니다.
-        
-        Args:
-            id (int): 벡터 ID
-        """
-        if id not in self.metadata_store:
-            raise KeyError(f"ID {id}에 해당하는 벡터가 존재하지 않습니다.")
-            
-        del self.metadata_store[id]
-        # 디스크에 저장
-        self._save_to_disk()
-        
-    def search_similar(self, query: str, k: int = 5) -> list:
-        """
-        유사한 벡터를 검색합니다.
-        
-        Args:
-            query (str): 검색 쿼리
-            k (int): 반환할 결과 수
-            
-        Returns:
-            list: 유사한 벡터들의 메타데이터 리스트
-        """
-        try:
-            if len(self.metadata_store) == 0:
-                return []
+        # 기존 데이터 로드
+        self._load_data()
 
-            # 쿼리에서 제목 생성
-            query_title = self._generate_title(query)
+    def _load_data(self):
+        """저장된 데이터를 로드합니다."""
+        try:
+            if os.path.exists(self.index_path):
+                self.index = faiss.read_index(self.index_path)
+            if os.path.exists(self.metadata_path):
+                with open(self.metadata_path, "r", encoding="utf-8") as f:
+                    self.metadata = json.load(f)
+            if os.path.exists(self.id_map_path):
+                with open(self.id_map_path, "rb") as f:
+                    self.id_to_index = pickle.load(f)
+                if self.id_to_index:
+                    self.next_index = max(self.id_to_index.values()) + 1
+        except Exception as e:
+            logger.error(f"데이터 로드 중 오류 발생: {str(e)}")
+            # 초기 상태로 리셋
+            self.index = faiss.IndexFlatL2(self.dimension)
+            self.metadata = {}
+            self.id_to_index = {}
+            self.next_index = 0
+
+    def store_vector(self, id: int, text: str, metadata: Dict[str, Any]) -> bool:
+        """
+        텍스트를 벡터로 변환하여 저장합니다.
+        
+        Args:
+            id (int): 벡터의 고유 ID
+            text (str): 임베딩할 텍스트
+            metadata (Dict[str, Any]): 벡터와 관련된 메타데이터
             
-            # 쿼리 제목과 원본 쿼리를 결합하여 벡터화
-            combined_query = f"{query_title} {query}"
-            query_vector = self._get_embedding(combined_query)
+        Returns:
+            bool: 저장 성공 여부
+        """
+        try:
+            # 텍스트 임베딩
+            vector = self.model.encode([text])[0]
+            if len(vector) != self.dimension:
+                raise ValueError(f"임베딩 차원({len(vector)})이 예상 차원({self.dimension})과 다릅니다.")
+
+            # 벡터 정규화
+            vector = vector.reshape(1, -1)
+            faiss.normalize_L2(vector)
+
+            # 인덱스에 추가
+            self.index.add(vector)
+            self.metadata[id] = metadata
+            self.id_to_index[id] = self.next_index
+            self.next_index += 1
+
+            # 상태 저장
+            self._save_state()
+            return True
+        except Exception as e:
+            logger.error(f"벡터 저장 중 오류 발생: {str(e)}")
+            return False
+
+    def search_similar(self, text: str, k: int = 5) -> List[Tuple[int, float, Dict[str, Any]]]:
+        """
+        주어진 텍스트와 가장 유사한 벡터들을 검색합니다.
+        
+        Args:
+            text (str): 검색할 텍스트
+            k (int): 반환할 결과 수 (기본값: 5)
             
-            # 실제 저장된 벡터 수에 맞춰 k 값 조정
-            k = min(k, len(self.metadata_store))
-            
+        Returns:
+            List[Tuple[int, float, Dict[str, Any]]]: (ID, 유사도 점수, 메타데이터) 튜플의 리스트
+        """
+        try:
+            # 텍스트 임베딩
+            query_vector = self.model.encode([text])[0]
+            query_vector = query_vector.reshape(1, -1)
+            faiss.normalize_L2(query_vector)
+
             # 유사도 검색
             distances, indices = self.index.search(query_vector, k)
             
-            # 결과 반환
+            # 결과 매핑
             results = []
-            metadata_ids = list(self.metadata_store.keys())
-            
-            for i, idx in enumerate(indices[0]):
-                if idx != -1 and idx < len(metadata_ids):  # 유효한 인덱스인지 확인
-                    metadata_id = metadata_ids[idx]
-                    result = {
-                        "id": metadata_id,
-                        "text": self.metadata_store[metadata_id]["text"],
-                        "title": self.metadata_store[metadata_id]["title"],
-                        "metadata": self.metadata_store[metadata_id]["metadata"],
-                        "similarity_score": float(1 / (1 + distances[0][i]))
-                    }
-                    results.append(result)
-            
+            for distance, idx in zip(distances[0], indices[0]):
+                if idx != -1:  # 유효한 인덱스인 경우
+                    # 인덱스로부터 원본 ID 찾기
+                    original_id = None
+                    for id, index in self.id_to_index.items():
+                        if index == idx:
+                            original_id = id
+                            break
+                    
+                    if original_id is not None and original_id in self.metadata:
+                        results.append((original_id, float(distance), self.metadata[original_id]))
+
             return results
-            
         except Exception as e:
-            logger.error(f"유사 벡터 검색 중 오류 발생: {str(e)}")
-            return [] 
+            logger.error(f"유사도 검색 중 오류 발생: {str(e)}")
+            return []
+
+    def _save_state(self):
+        """현재 상태를 저장합니다."""
+        try:
+            faiss.write_index(self.index, self.index_path)
+            with open(self.metadata_path, "w", encoding="utf-8") as f:
+                json.dump(self.metadata, f, ensure_ascii=False, indent=2)
+            with open(self.id_map_path, "wb") as f:
+                pickle.dump(self.id_to_index, f)
+        except Exception as e:
+            logger.error(f"상태 저장 중 오류 발생: {str(e)}")
+            raise
+
+    def delete_vector(self, id: int) -> bool:
+        """
+        지정된 ID의 벡터를 삭제합니다.
+        
+        Args:
+            id (int): 삭제할 벡터의 ID
+            
+        Returns:
+            bool: 삭제 성공 여부
+        """
+        try:
+            if id not in self.id_to_index:
+                return False
+
+            # 새로운 인덱스 생성
+            new_index = faiss.IndexFlatL2(self.dimension)
+            new_metadata = {}
+            new_id_map = {}
+            next_idx = 0
+
+            # 삭제할 ID를 제외한 모든 벡터 복사
+            for vid, idx in self.id_to_index.items():
+                if vid != id:
+                    vector = self.index.reconstruct(idx).reshape(1, -1)
+                    new_index.add(vector)
+                    new_metadata[vid] = self.metadata[vid]
+                    new_id_map[vid] = next_idx
+                    next_idx += 1
+
+            # 새로운 상태로 업데이트
+            self.index = new_index
+            self.metadata = new_metadata
+            self.id_to_index = new_id_map
+            self.next_index = next_idx
+
+            # 상태 저장
+            self._save_state()
+            return True
+        except Exception as e:
+            logger.error(f"벡터 삭제 중 오류 발생: {str(e)}")
+            return False
+
+    def get_statistics(self) -> Dict[str, Any]:
+        """벡터 DB 통계 정보를 반환합니다."""
+        return {
+            "total_vectors": self.index.ntotal,
+            "dimension": self.dimension,
+            "index_size_bytes": os.path.getsize(self.index_path) if os.path.exists(self.index_path) else 0,
+            "metadata_size_bytes": os.path.getsize(self.metadata_path) if os.path.exists(self.metadata_path) else 0,
+            "last_modified": datetime.fromtimestamp(os.path.getmtime(self.index_path)).isoformat() 
+                            if os.path.exists(self.index_path) else None
+        } 

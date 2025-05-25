@@ -2,6 +2,8 @@ from typing import Dict, Any
 import logging
 from .vector_db_service import VectorDBService
 from .excel_service import ExcelService
+from .powerpoint_service import PowerPointService
+from .word_service import WordService
 from prompts.prompt_factory import PromptFactory
 import base64
 from io import BytesIO
@@ -14,6 +16,8 @@ class CommandHandler:
         self.vector_db_service = vector_db_service
         self.prompt_factory = prompt_factory
         self.excel_service = ExcelService()
+        self.powerpoint_service = PowerPointService()
+        self.word_service = WordService()
 
     def handle_command(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -32,12 +36,13 @@ class CommandHandler:
             command_handlers = {
                 'request_single_generated_response': self._handle_single_response,
                 'search_similar_context': self._handle_similar_context_search,
-                'run_convert_prompt': self._handle_convert_prompt
+                'run_convert_prompt': self._handle_convert_prompt,
+                'process_file': self._handle_file_processing
             }
             
             # 파일 데이터가 있는 경우 엑셀 처리
             if 'file_data' in message:
-                return self._handle_excel_file(message['file_data'])
+                return self._handle_file_processing(message)
             
             # 매핑된 핸들러 실행
             handler = command_handlers.get(command)
@@ -156,6 +161,33 @@ class CommandHandler:
                 'status': 'error'
             }
 
+    def _handle_file_processing(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """파일 처리"""
+        try:
+            file_data = message.get('file_data', {})
+            file_type = file_data.get('content_type', '')
+            
+            if 'spreadsheetml.sheet' in file_type:
+                return self._handle_excel_file(file_data)
+            elif 'presentationml.presentation' in file_type:
+                return self._handle_powerpoint_file(file_data)
+            elif 'wordprocessingml.document' in file_type:
+                return self._handle_word_file(file_data)
+            else:
+                return {
+                    'command': 'file_processing',
+                    'message': '지원하지 않는 파일 형식입니다.',
+                    'status': 'error'
+                }
+                
+        except Exception as e:
+            logger.error(f"파일 처리 중 오류 발생: {str(e)}")
+            return {
+                'command': 'file_processing',
+                'message': f'파일 처리 중 오류가 발생했습니다: {str(e)}',
+                'status': 'error'
+            }
+
     def _handle_excel_file(self, file_data: Dict[str, Any]) -> Dict[str, Any]:
         """엑셀 파일 처리"""
         try:
@@ -196,5 +228,93 @@ class CommandHandler:
             return {
                 'command': 'excel_summary',
                 'message': f'엑셀 파일 처리 중 오류가 발생했습니다: {str(e)}',
+                'status': 'error'
+            }
+
+    def _handle_powerpoint_file(self, file_data: Dict[str, Any]) -> Dict[str, Any]:
+        """PowerPoint 파일 처리"""
+        try:
+            # base64로 인코딩된 PPT 데이터를 디코딩
+            pptx_content = file_data.get('content', '')
+            presentation = self.powerpoint_service.read_pptx_data(pptx_content)
+            
+            if presentation is not None:
+                # 프레젠테이션 요약 정보 생성
+                summary = self.powerpoint_service.get_pptx_summary(presentation)
+                # 스타일 정의 추출
+                style_definitions = self.powerpoint_service.extract_style_definitions(presentation)
+                # 내용 추출
+                content = self.powerpoint_service.extract_content(presentation)
+                
+                # 벡터 DB에 내용 저장
+                if content:
+                    self.vector_db_service.store_program_info(
+                        program_id=file_data.get('id'),
+                        program_type='powerpoint',
+                        program_context=content
+                    )
+                
+                return {
+                    'command': 'powerpoint_summary',
+                    'summary': summary,
+                    'style_definitions': style_definitions,
+                    'content': content,
+                    'status': 'success'
+                }
+            else:
+                return {
+                    'command': 'powerpoint_summary',
+                    'message': 'PowerPoint 파일을 읽는 중 오류가 발생했습니다.',
+                    'status': 'error'
+                }
+        except Exception as e:
+            logger.error(f"PowerPoint 파일 처리 중 오류 발생: {str(e)}")
+            return {
+                'command': 'powerpoint_summary',
+                'message': f'PowerPoint 파일 처리 중 오류가 발생했습니다: {str(e)}',
+                'status': 'error'
+            }
+
+    def _handle_word_file(self, file_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Word 파일 처리"""
+        try:
+            # base64로 인코딩된 Word 데이터를 디코딩
+            docx_content = file_data.get('content', '')
+            document = self.word_service.read_docx_data(docx_content)
+            
+            if document is not None:
+                # 문서 요약 정보 생성
+                summary = self.word_service.get_docx_summary(document)
+                # 스타일 정의 추출
+                style_definitions = self.word_service.extract_style_definitions(document)
+                # 내용 추출
+                content = self.word_service.extract_content(document)
+                
+                # 벡터 DB에 내용 저장
+                if content:
+                    self.vector_db_service.store_program_info(
+                        program_id=file_data.get('id'),
+                        program_type='word',
+                        program_context=content
+                    )
+                
+                return {
+                    'command': 'word_summary',
+                    'summary': summary,
+                    'style_definitions': style_definitions,
+                    'content': content,
+                    'status': 'success'
+                }
+            else:
+                return {
+                    'command': 'word_summary',
+                    'message': 'Word 파일을 읽는 중 오류가 발생했습니다.',
+                    'status': 'error'
+                }
+        except Exception as e:
+            logger.error(f"Word 파일 처리 중 오류 발생: {str(e)}")
+            return {
+                'command': 'word_summary',
+                'message': f'Word 파일 처리 중 오류가 발생했습니다: {str(e)}',
                 'status': 'error'
             } 
