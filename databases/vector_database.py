@@ -138,8 +138,10 @@ class VectorDatabase:
         title = self._generate_title(text)
         
         # 제목과 원본 텍스트를 결합하여 벡터화
-        combined_text = f"{title} {text}"
-        vector = self._get_embedding(combined_text)
+        # combined_text = f"{title} {text}"
+        
+        # 제목만 벡터화
+        vector = self._get_embedding(title)
         
         # 벡터 저장
         self.index.add(vector)

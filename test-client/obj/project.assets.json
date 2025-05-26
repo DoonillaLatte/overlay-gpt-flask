@@ -266,19 +266,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\kjbdd\\.nuget\\packages\\": {}
+    "/Users/cuhun/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Project\\Overlay Helper\\overlay-gpt-flask\\test-client\\test-client.csproj",
+      "projectUniqueName": "/Users/cuhun/Desktop/OverlayGPT/overlay-gpt-flask/test-client/test-client.csproj",
       "projectName": "test-client",
-      "projectPath": "C:\\Project\\Overlay Helper\\overlay-gpt-flask\\test-client\\test-client.csproj",
-      "packagesPath": "C:\\Users\\kjbdd\\.nuget\\packages\\",
-      "outputPath": "C:\\Project\\Overlay Helper\\overlay-gpt-flask\\test-client\\obj\\",
+      "projectPath": "/Users/cuhun/Desktop/OverlayGPT/overlay-gpt-flask/test-client/test-client.csproj",
+      "packagesPath": "/Users/cuhun/.nuget/packages/",
+      "outputPath": "/Users/cuhun/Desktop/OverlayGPT/overlay-gpt-flask/test-client/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\kjbdd\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/cuhun/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -302,7 +302,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net9.0": {
@@ -324,12 +324,18 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[9.0.3, 9.0.3]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.202/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

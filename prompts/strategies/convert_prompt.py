@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-@register_prompt("convert")
+@register_prompt("convert_prompt")
 class ConvertPrompt():
     def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None, suffix: Optional[str] = None):
         """

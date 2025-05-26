@@ -21,6 +21,7 @@ class VectorDBService:
     def store_program_info(self, program_id: int, program_type: str, program_context: str) -> None:
         """
         프로그램 정보를 벡터 데이터베이스에 저장합니다.
+        동일한 program_id가 있는 경우 기존 데이터를 삭제하고 새로운 데이터를 저장합니다.
         
         Args:
             program_id (int): 프로그램 ID
@@ -28,6 +29,14 @@ class VectorDBService:
             program_context (str): 프로그램 컨텍스트
         """
         try:
+            # 동일한 program_id가 있는지 확인하고 있다면 삭제
+            try:
+                self._vector_db.get_vector(program_id)
+                self._vector_db.delete_vector(program_id)
+                logger.info(f"기존 프로그램 정보가 삭제되었습니다. ID: {program_id}")
+            except:
+                pass  # 기존 데이터가 없는 경우 무시
+            
             # 프로그램 정보를 벡터로 변환
             program_info = f"{program_type} {program_context}"
             

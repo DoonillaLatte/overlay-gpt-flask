@@ -4,6 +4,7 @@ from .strategies.explain_prompt import ExplainPrompt
 from .strategies.freestyle_prompt import FreestylePrompt
 from .strategies.generate_text_prompt import GenerateTextPrompt
 from .strategies.summary_prompt import SummaryPrompt
+from .strategies.convert_prompt import ConvertPrompt
 
 class PromptFactory:
     def __init__(self):
@@ -15,6 +16,7 @@ class PromptFactory:
         self.register_strategy("freestyle", FreestylePrompt)
         self.register_strategy("generate_text", GenerateTextPrompt)
         self.register_strategy("summary", SummaryPrompt)
+        self.register_strategy("convert_prompt", ConvertPrompt)
         
     def register_strategy(self, name: str, strategy: Type[PromptStrategy]):
         self._strategies[name] = strategy
