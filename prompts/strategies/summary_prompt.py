@@ -41,16 +41,26 @@ class SummaryPrompt():
         
         # 요청 데이터에서 필요한 정보 추출
         prompt = request_data.get('prompt', '')
-        description = request_data.get('description', '')
-        current_program = request_data.get('current_program', {})
-        target_program = request_data.get('target_program', {})
+        current_program = request_data.get('current_program')
         
         # 프롬프트 템플릿 생성
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", self.prefix),
-            ("user", f"요청: {prompt}\n설명: {description}\n현재 프로그램: {current_program.get('type', '')} - {current_program.get('context', '')}\n대상 프로그램: {target_program.get('type', '')} - {target_program.get('context', '')}"),
-            ("user", self.suffix)
-        ])
+        if current_program:
+            prompt_template = ChatPromptTemplate.from_messages([
+                ("system", self.prefix),
+                ("user", f"""사용자 요청: {prompt}
+                    첨부된 파일 정보:
+                    - 파일명: {current_program.get('fileName', '')}
+                    - 파일 형식: {current_program.get('fileType', '')}
+                    - 파일 내용:
+                    {current_program.get('context', '')}"""),
+                ("user", self.suffix)
+            ])
+        else:
+            prompt_template = ChatPromptTemplate.from_messages([
+                ("system", self.prefix),
+                ("user", f"사용자 요청: {prompt}"),
+                ("user", self.suffix)
+            ])
         
         llm = ChatOpenAI(model="gpt-4",
                          api_key=api_key,

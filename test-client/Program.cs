@@ -147,20 +147,9 @@ class Program
                 command = "request_single_generated_response",
                 chat_id = 1,
                 prompt = "C#에서 'Hello, World!'를 출력하는 방법을 알려주세요.",
-                request_type = 1, // 1: explain
-                description = "C# 기초 문법 설명",
-                current_program = new
-                {
-                    id = 1,
-                    type = "csharp",
-                    context = "기초 프로그래밍"
-                },
-                target_program = new
-                {
-                    id = 2,
-                    type = "text",
-                    context = "학습 가이드"
-                }
+                request_type = 1, // 1: freestyle, 2: generate_text, 3: explain, 4: summary
+                current_program = (object)null,
+                target_program = (object)null
             };
 
             // 이벤트 핸들러 설정

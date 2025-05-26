@@ -1,11 +1,9 @@
 from typing import Dict, Any
 import logging
 from .vector_db_service import VectorDBService
+from databases.vector_database import VectorDatabase
 from .excel_service import ExcelService
 from prompts.prompt_factory import PromptFactory
-import base64
-from io import BytesIO
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -59,10 +57,15 @@ class CommandHandler:
                 'chat_id': message.get('chat_id'),
                 'prompt': message.get('prompt'),
                 'request_type': message.get('request_type'),
-                'description': message.get('description'),
                 'current_program': message.get('current_program'),
                 'target_program': message.get('target_program')
             }
+            
+            # 필수 필드 검증
+            if not content['prompt']:
+                raise ValueError("prompt는 필수 입력값입니다.")
+            if not content['request_type']:
+                raise ValueError("request_type은 필수 입력값입니다.")
             
             # target_program이 있는 경우 convert_prompt 사용
             if content.get('target_program'):
@@ -78,16 +81,27 @@ class CommandHandler:
             strategy = self.prompt_factory.get_strategy(strategy_name)
             response = strategy.generate_prompt(content)
             
+            # 제목 생성
+            title = self.vector_db_service._vector_db._generate_title(content['prompt'])
+            
             return {
-                'command': f'response_for_{strategy}',
+                'command': f'response_for_{strategy_name}',
+                'title': title,
                 'message': response,
                 'status': 'success'
             }
-        except Exception as e:
-            logger.error(f"단일 응답 생성 중 오류 발생: {str(e)}")
+        except ValueError as e:
+            logger.error(f"잘못된 요청: {str(e)}")
             return {
-                'command': 'response_single_generated_response',
-                'message': f'프롬프트 처리 중 오류 발생: {str(e)}',
+                'command': 'response_error',
+                'message': str(e),
+                'status': 'error'
+            }
+        except Exception as e:
+            logger.error(f"응답 생성 중 오류 발생: {str(e)}")
+            return {
+                'command': 'response_error',
+                'message': f'처리 중 오류가 발생했습니다: {str(e)}',
                 'status': 'error'
             }
 
@@ -98,9 +112,7 @@ class CommandHandler:
                 'chat_id': message.get('chat_id'),
                 'prompt': message.get('prompt'),
                 'request_type': message.get('request_type'),
-                'description': message.get('description'),
-                'current_program': message.get('current_program'),
-                'target_program': message.get('target_program')
+                'current_program': message.get('current_program')
             }
             
             multi_program_id = content['current_program']['fileId']
