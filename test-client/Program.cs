@@ -144,11 +144,19 @@ class Program
             // 테스트용 요청 데이터
             var request = new
             {
-                command = "request_single_generated_response",
+                command = "request_prompt",
                 chat_id = 1,
-                prompt = "C#에서 'Hello, World!'를 출력하는 방법을 알려주세요.",
+                prompt = "이 파일에 적힌 내용을 모두 한글로 변환해줘",
                 request_type = 1, // 1: freestyle, 2: generate_text, 3: explain, 4: summary
-                current_program = (object)null,
+                current_program = new
+                {
+                    context = "<table style='border-collapse:collapse'><tr><td style='background-color: #FFFF00; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-left: 1px solid #000000'>AA</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000'><u>DD</u></td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000'></td></tr><tr><td style='text-align: left; vertical-align: bottom; border-left: 1px solid #000000'></td><td style='color: #FF0000; text-align: left; vertical-align: bottom'>BB</td><td style='font-size: 14pt; text-align: left; vertical-align: bottom; border-right: 1px solid #000000'><i>AA</i></td></tr><tr><td style='text-align: left; vertical-align: bottom; border-bottom: 1px solid #000000; border-left: 1px solid #000000'></td><td style='text-align: left; vertical-align: bottom; border-bottom: 1px solid #000000'>GG</td><td style='text-align: left; vertical-align: bottom; border-right: 1px solid #000000; border-bottom: 1px solid #000000'></td></tr></table>",
+                    fileId = 21955048185373228UL,     // ulong? (nullable) 파일 고유 아이디
+                    volumeId = 2524257335U,          // uint? (nullable) 드라이브 아이디
+                    fileType = "Excel",             // string
+                    fileName = "test.xlsx",         // string
+                    filePath = "C:\\...\\test.xlsx" // string
+                },
                 target_program = (object)null
             };
 

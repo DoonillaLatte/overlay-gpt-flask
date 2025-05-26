@@ -26,7 +26,7 @@ class CommandHandler:
             
             # 명령어별 처리 함수 매핑
             command_handlers = {
-                'request_single_generated_response': self._handle_response,
+                'request_prompt': self._handle_response,
                 'request_top_workflows': self._handle_request_top_workflows
             }
             
@@ -36,7 +36,7 @@ class CommandHandler:
                 return handler(message)
             else:
                 return {
-                    'command': f'response_for_{command}',
+                    'command': f'generated_response',
                     'message': f'지원하지 않는 명령어입니다: {command}',
                     'status': 'error'
                 }
@@ -79,14 +79,15 @@ class CommandHandler:
             # 파일 형식에 따른 예시 검색
             examples = []
             if content.get('current_program'):
-                file_type = content['current_program'].get('fileType')
+                current_program = content['current_program']
+                file_type = current_program.get('fileType')
                 if file_type:
                     # 파일 형식에 맞는 예시 검색
                     similar_examples = self.vector_db_service.search_similar_programs(
                         query=f"fileType:{file_type}",
                         k=3
                     )
-                    examples = [example['context'] for example in similar_examples]
+                    examples = [example.get('context', '') for example in similar_examples]
             
             # 예시를 content에 추가
             content['examples'] = examples
@@ -98,7 +99,7 @@ class CommandHandler:
             title = self.vector_db_service._vector_db._generate_title(content['prompt'])
             
             return {
-                'command': f'response_for_{strategy_name}',
+                'command': f'generated_response',
                 'title': title,
                 'message': response,
                 'status': 'success'
@@ -106,14 +107,14 @@ class CommandHandler:
         except ValueError as e:
             logger.error(f"잘못된 요청: {str(e)}")
             return {
-                'command': 'response_error',
+                'command': 'generated_response',
                 'message': str(e),
                 'status': 'error'
             }
         except Exception as e:
             logger.error(f"응답 생성 중 오류 발생: {str(e)}")
             return {
-                'command': 'response_error',
+                'command': 'generated_response',
                 'message': f'처리 중 오류가 발생했습니다: {str(e)}',
                 'status': 'error'
             }

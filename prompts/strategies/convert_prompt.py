@@ -63,6 +63,7 @@ class ConvertPrompt():
         # 프롬프트 템플릿 생성
         if current_program:
             prompt_template = ChatPromptTemplate.from_messages([
+                ("system", "당신은 코드 생성 전용 AI입니다. 오직 코드만 출력하세요. 설명이나 주석은 절대 쓰지 마세요."),
                 ("system", self.prefix),
                 ("user", f"""사용자 요청: {prompt}
                     첨부된 파일 정보:
