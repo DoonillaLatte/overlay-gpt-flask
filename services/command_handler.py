@@ -2,7 +2,6 @@ from typing import Dict, Any
 import logging
 from .vector_db_service import VectorDBService
 from databases.vector_database import VectorDatabase
-from .excel_service import ExcelService
 from prompts.prompt_factory import PromptFactory
 
 logger = logging.getLogger(__name__)
@@ -11,7 +10,6 @@ class CommandHandler:
     def __init__(self, vector_db_service: VectorDBService, prompt_factory: PromptFactory):
         self.vector_db_service = vector_db_service
         self.prompt_factory = prompt_factory
-        self.excel_service = ExcelService()
 
     def handle_command(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -77,6 +75,21 @@ class CommandHandler:
                     3: "explain",
                     4: "summary"
                 }.get(content['request_type'], "freestyle")
+            
+            # 파일 형식에 따른 예시 검색
+            examples = []
+            if content.get('current_program'):
+                file_type = content['current_program'].get('fileType')
+                if file_type:
+                    # 파일 형식에 맞는 예시 검색
+                    similar_examples = self.vector_db_service.search_similar_programs(
+                        query=f"fileType:{file_type}",
+                        k=3
+                    )
+                    examples = [example['context'] for example in similar_examples]
+            
+            # 예시를 content에 추가
+            content['examples'] = examples
             
             strategy = self.prompt_factory.get_strategy(strategy_name)
             response = strategy.generate_prompt(content)

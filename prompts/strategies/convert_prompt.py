@@ -23,8 +23,8 @@ class ConvertPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "다음 내용을 변환해주세요:"
-        self.suffix = suffix or "변환된 내용:"
+        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여 요청에 따라 대상 프로그램의 형식에 맞는 html코드를 작성해주세요."
+        self.suffix = suffix or "답변:"
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
         """
@@ -44,39 +44,48 @@ class ConvertPrompt():
         Raises:
             ValueError: 필수 입력값이 누락된 경우
         """
-        try:
-            # 필수 입력값 검증
-            required_fields = ['prompt', 'current_program', 'target_program', 'file_id']
-            for field in required_fields:
-                if field not in request_data:
-                    raise ValueError(f"필수 입력값 '{field}'가 누락되었습니다.")
+        """
+        주어진 요청 데이터를 기반으로 프롬프트를 생성합니다.
+        
+        Args:
+            request_data (Dict[str, Any]): 요청 데이터
             
-            output_parser = StrOutputParser()
-            
-            # 요청 데이터에서 필요한 정보 추출
-            prompt = request_data['prompt']
-            description = request_data.get('description', '')
-            current_program = request_data['current_program']
-            target_program = request_data['target_program']
-            file_id = request_data['file_id']
-            
-            # 프롬프트 템플릿 생성
+        Returns:
+            str: 생성된 프롬프트
+        """
+        output_parser = StrOutputParser()
+        
+        # 요청 데이터에서 필요한 정보 추출
+        prompt = request_data.get('prompt', '')
+        current_program = request_data.get('current_program')
+        target_program = request_data.get('target_program')
+        
+        # 프롬프트 템플릿 생성
+        if current_program:
             prompt_template = ChatPromptTemplate.from_messages([
                 ("system", self.prefix),
-                ("user", f"요청: {prompt}\n설명: {description}\n현재 프로그램: {current_program.get('type', '')} - {current_program.get('context', '')}\n대상 프로그램: {target_program.get('type', '')} - {target_program.get('context', '')}\n파일 ID: {file_id}"),
+                ("user", f"""사용자 요청: {prompt}
+                    첨부된 파일 정보:
+                    - 파일명: {current_program.get('fileName', '')}
+                    - 파일 형식: {current_program.get('fileType', '')}
+                    - 파일 내용:
+                    {current_program.get('context', '')}"""),
                 ("user", self.suffix)
             ])
-            
-            llm = ChatOpenAI(model="gpt-4",
-                            api_key=api_key,
-                            temperature=0.1
-                            )
-            
-            chain = prompt_template | llm | output_parser
-            
-            response = chain.invoke({})
-            
-            return response
-            
-        except Exception as e:
-            raise Exception(f"프롬프트 생성 중 오류가 발생했습니다: {str(e)}")
+        else:
+            prompt_template = ChatPromptTemplate.from_messages([
+                ("system", self.prefix),
+                ("user", f"사용자 요청: {prompt}"),
+                ("user", self.suffix)
+            ])
+        
+        llm = ChatOpenAI(model="gpt-4",
+                         api_key=api_key,
+                         temperature=0.7
+                         )
+        
+        chain = prompt_template | llm | output_parser
+        
+        response = chain.invoke({})
+        
+        return response

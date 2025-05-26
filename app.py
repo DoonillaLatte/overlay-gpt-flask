@@ -4,12 +4,8 @@ from prompts.prompt_factory import PromptFactory
 import json
 import logging
 from typing import Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from services.vector_db_service import VectorDBService
-from services.excel_service import ExcelService
-import base64
-import pandas as pd
-from io import BytesIO
 from services.command_handler import CommandHandler
 
 # 로깅 설정

@@ -42,16 +42,37 @@ class FreestylePrompt():
         # 요청 데이터에서 필요한 정보 추출
         prompt = request_data.get('prompt', '')
         current_program = request_data.get('current_program')
+        examples = request_data.get('examples', [])
         
         # 프롬프트 템플릿 생성
         if current_program:
-            prompt_template = ChatPromptTemplate.from_messages([
+            # 예시가 있는 경우
+            if examples:
+                examples_text = "\n\n".join([f"예시 {i+1}:\n{example}" for i, example in enumerate(examples)])
+                prompt_template = ChatPromptTemplate.from_messages([
+                    ("system", self.prefix),
+                    ("system", f"""다음은 {current_program.get('fileType', '')} 파일 형식의 예시입니다. 
+                        이 예시들을 참고하여 요청에 응답해주세요:
+                        
+                        {examples_text}"""),
+                    ("user", f"""사용자 요청: {prompt}
+                        첨부된 파일 정보:
+                        - 파일명: {current_program.get('fileName', '')}
+                        - 파일 형식: {current_program.get('fileType', '')}
+                        - 파일 내용:
+                        {current_program.get('context', '')}"""),
+                    ("user", self.suffix)
+                ])
+            else:
+                prompt_template = ChatPromptTemplate.from_messages([
                 ("system", self.prefix),
+                ("system", """파일 내용은 HTML 마크업 형식으로 제공됩니다. 
+                    마크업을 해석하여 내용을 이해하고 적절히 응답해주세요."""),
                 ("user", f"""사용자 요청: {prompt}
                     첨부된 파일 정보:
                     - 파일명: {current_program.get('fileName', '')}
                     - 파일 형식: {current_program.get('fileType', '')}
-                    - 파일 내용:
+                    - 파일 내용 (HTML 마크업):
                     {current_program.get('context', '')}"""),
                 ("user", self.suffix)
             ])
