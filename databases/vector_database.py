@@ -8,6 +8,7 @@ import json
 import pickle
 from openai import OpenAI
 from dotenv import load_dotenv
+from collections import OrderedDict
 
 # 환경 변수 로드
 load_dotenv()
@@ -15,18 +16,20 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 class VectorDatabase:
-    def __init__(self, dimension: int = 768, storage_dir: str = "vector_db"):
+    def __init__(self, dimension: int = 768, storage_dir: str = "vector_db", max_vectors: int = 1000):
         """
         벡터 데이터베이스를 초기화합니다.
         
         Args:
             dimension (int): 벡터의 차원 수 (기본값: 768)
             storage_dir (str): 벡터 데이터베이스 저장 디렉토리 (기본값: "vector_db")
+            max_vectors (int): 최대 저장 벡터 수 (기본값: 1000)
         """
         self.dimension = dimension
         self.storage_dir = storage_dir
         self.index_path = os.path.join(storage_dir, "faiss_index.bin")
         self.metadata_path = os.path.join(storage_dir, "metadata.json")
+        self.max_vectors = max_vectors
         
         # OpenAI 클라이언트 초기화
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -125,20 +128,54 @@ class VectorDatabase:
             logger.error(f"텍스트 임베딩 중 오류 발생: {str(e)}")
             raise
         
+    def _remove_oldest_vector(self) -> None:
+        """
+        가장 오래된 벡터를 삭제합니다.
+        """
+        if not self.metadata_store:
+            return
+
+        # 가장 오래된 ID 찾기
+        oldest_id = min(self.metadata_store.keys(), key=lambda x: int(x))
+        
+        # 메타데이터에서 삭제
+        del self.metadata_store[oldest_id]
+        
+        # FAISS 인덱스 재구성
+        if len(self.metadata_store) > 0:
+            # 새로운 인덱스 생성
+            new_index = faiss.IndexFlatL2(self.dimension)
+            
+            # 남은 벡터들을 새 인덱스에 추가
+            remaining_ids = sorted(self.metadata_store.keys(), key=lambda x: int(x))
+            for id in remaining_ids:
+                text = self.metadata_store[id]["text"]
+                vector = self._get_embedding(text)
+                new_index.add(vector)
+            
+            # 기존 인덱스 교체
+            self.index = new_index
+        else:
+            # 모든 벡터가 삭제된 경우 새 인덱스 생성
+            self.index = faiss.IndexFlatL2(self.dimension)
+        
+        logger.info(f"가장 오래된 벡터가 삭제되었습니다. ID: {oldest_id}")
+
     def store_vector(self, id: int, text: str, metadata: Dict[str, Any]) -> None:
         """
-        벡터를 저장합니다.
+        벡터를 저장합니다. 최대 저장 개수를 초과하면 가장 오래된 벡터를 삭제합니다.
         
         Args:
             id (int): 벡터 ID
             text (str): 텍스트 데이터
             metadata (Dict[str, Any]): 메타데이터
         """
+        # 최대 저장 개수 확인
+        if len(self.metadata_store) >= self.max_vectors:
+            self._remove_oldest_vector()
+        
         # 텍스트에서 제목 생성
         title = self._generate_title(text)
-        
-        # 제목과 원본 텍스트를 결합하여 벡터화
-        # combined_text = f"{title} {text}"
         
         # 제목만 벡터화
         vector = self._get_embedding(title)
