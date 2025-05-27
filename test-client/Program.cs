@@ -232,6 +232,30 @@ class Program
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ResponseTimeoutSeconds));
                 await responseReceived.Task.WaitAsync(cts.Token);
                 Console.WriteLine("응답 처리 완료");
+
+                // 새로운 요청을 위한 TaskCompletionSource 재설정
+                responseReceived = new TaskCompletionSource<bool>();
+
+                // 이전 대화를 기억하는 새로운 요청
+                var followUpRequest = new
+                {
+                    command = "request_prompt",
+                    chat_id = 1,  // chat_id를 1로 유지
+                    prompt = "방금 내가 뭐라고 물어봤지?",
+                    request_type = 1 // freestyle
+                };
+
+                Console.WriteLine("\n후속 요청 데이터:");
+                Console.WriteLine(JsonSerializer.Serialize(followUpRequest, new JsonSerializerOptions { WriteIndented = true }));
+                
+                Console.WriteLine("\n후속 요청 전송 중...");
+                await client.EmitAsync("message", followUpRequest);
+                Console.WriteLine("후속 요청 전송 완료");
+
+                // 후속 요청에 대한 응답 대기
+                Console.WriteLine("\n후속 요청에 대한 응답 대기 중...");
+                await responseReceived.Task.WaitAsync(cts.Token);
+                Console.WriteLine("후속 응답 처리 완료");
             }
             catch (OperationCanceledException)
             {

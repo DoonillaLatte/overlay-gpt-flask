@@ -2,15 +2,17 @@ from typing import Optional, Dict, Any
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from langchain.chains import LLMChain
 import os
 from registry import register_prompt
 import logging
+from .memory_manager import MemoryManager
 
 logger = logging.getLogger(__name__)
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-@register_prompt("freestyle")
+@register_prompt("freestyle_prompt")
 class FreestylePrompt():
     def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None, suffix: Optional[str] = None):
         """
@@ -23,7 +25,7 @@ class FreestylePrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "다음 내용을 자유롭게 작성해주세요:"
+        self.prefix = prefix or "다음 요청에 맞는 텍스트를 작성해주세요:"
         self.suffix = suffix or "작성된 내용:"
         self.logger = logging.getLogger(__name__)
 
@@ -45,6 +47,9 @@ class FreestylePrompt():
             current_program = request_data.get('current_program')
             examples = request_data.get('examples', [])
             
+            # MemoryManager를 통해 메모리 가져오기
+            memory = MemoryManager.get_memory()
+            
             # 프롬프트 템플릿 생성
             if current_program:
                 # 예시가 있는 경우
@@ -52,36 +57,44 @@ class FreestylePrompt():
                     examples_text = "\n\n".join([f"예시 {i+1}:\n{example}" for i, example in enumerate(examples)])
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
+                        ("system", """파일 내용은 HTML 마크업 형식으로 제공됩니다. 
+                            테이블을 해석하여 내용을 이해하고 요구사항에 따라 결과물을 생성해주세요."""),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 형식의 예시입니다. 
                             이 예시들을 참고하여 요청에 응답해주세요:
                             
                             {examples_text}"""),
-                        ("user", f"""사용자 요청: {prompt}
+                        ("human", "{input}"),
+                        ("ai", "{chat_history}"),
+                        ("human", f"""사용자 요청: {prompt}
                             첨부된 파일 정보:
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
                             {current_program.get('context', '')}"""),
-                        ("user", self.suffix)
+                        ("human", self.suffix)
                     ])
                 else:
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
                         ("system", """파일 내용은 HTML 마크업 형식으로 제공됩니다. 
                             테이블을 해석하여 내용을 이해하고 요구사항에 따라 결과물을 생성해주세요."""),
-                        ("user", f"""사용자 요청: {prompt}
+                        ("human", "{input}"),
+                        ("ai", "{chat_history}"),
+                        ("human", f"""사용자 요청: {prompt}
                             첨부된 파일 정보:
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용 (HTML 마크업):
                             {current_program.get('context', '')}"""),
-                        ("user", self.suffix)
+                        ("human", self.suffix)
                     ])
             else:
                 prompt_template = ChatPromptTemplate.from_messages([
                     ("system", self.prefix),
-                    ("user", f"사용자 요청: {prompt}"),
-                    ("user", self.suffix)
+                    ("human", "{input}"),
+                    ("ai", "{chat_history}"),
+                    ("human", f"사용자 요청: {prompt}"),
+                    ("human", self.suffix)
                 ])
             
             llm = ChatOpenAI(model="gpt-4",
@@ -89,11 +102,17 @@ class FreestylePrompt():
                             temperature=0.5
                             )
             
-            chain = prompt_template | llm | output_parser
+            chain = LLMChain(
+                llm=llm,
+                prompt=prompt_template,
+                memory=memory,
+                verbose=True
+            )
             
-            response = chain.invoke({})
+            response = chain.predict(input=prompt)
             
             return response
+        
         except Exception as e:
             self.logger.error(f"프롬프트 생성 중 오류 발생: {str(e)}", exc_info=True)
             raise

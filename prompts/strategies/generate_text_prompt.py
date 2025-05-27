@@ -2,11 +2,15 @@ from typing import Optional, Dict, Any
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from langchain.chains import LLMChain
 import os
 from registry import register_prompt
 import logging
+from .memory_manager import MemoryManager
 
 logger = logging.getLogger(__name__)
+
+api_key = os.getenv("OPENAI_API_KEY")
 
 @register_prompt("generate_text")
 class GenerateTextPrompt():
@@ -21,8 +25,9 @@ class GenerateTextPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "다음 내용을 바탕으로 텍스트를 생성해주세요:"
+        self.prefix = prefix or "다음 요청에 맞는 텍스트를 생성해주세요:"
         self.suffix = suffix or "생성된 텍스트:"
+        self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
         """
@@ -34,40 +39,83 @@ class GenerateTextPrompt():
         Returns:
             str: 생성된 프롬프트
         """
+        try:
+            output_parser = StrOutputParser()
+            
+            # 요청 데이터에서 필요한 정보 추출
+            prompt = request_data.get('prompt', '')
+            current_program = request_data.get('current_program')
+            examples = request_data.get('examples', [])
+            
+            # MemoryManager를 통해 메모리 가져오기
+            memory = MemoryManager.get_memory()
+            
+            # 프롬프트 템플릿 생성
+            if current_program:
+                # 예시가 있는 경우
+                if examples:
+                    examples_text = "\n\n".join([f"예시 {i+1}:\n{example}" for i, example in enumerate(examples)])
+                    prompt_template = ChatPromptTemplate.from_messages([
+                        ("system", self.prefix),
+                        ("system", """텍스트 생성 전용 AI입니다. 
+                            사용자의 요청에 맞는 자연스러운 텍스트를 생성해주세요."""),
+                        ("system", f"""다음은 텍스트 생성 예시입니다. 
+                            이 예시들을 참고하여 요청에 응답해주세요:
+                            
+                            {examples_text}"""),
+                        ("human", "{input}"),
+                        ("ai", "{chat_history}"),
+                        ("human", f"""사용자 요청: {prompt}
+                            첨부된 파일 정보:
+                            - 파일명: {current_program.get('fileName', '')}
+                            - 파일 형식: {current_program.get('fileType', '')}
+                            - 파일 내용:
+                            {current_program.get('context', '')}"""),
+                        ("human", self.suffix)
+                    ])
+                else:
+                    prompt_template = ChatPromptTemplate.from_messages([
+                        ("system", self.prefix),
+                        ("system", """텍스트 생성 전용 AI입니다. 
+                            사용자의 요청에 맞는 자연스러운 텍스트를 생성해주세요."""),
+                        ("human", "{input}"),
+                        ("ai", "{chat_history}"),
+                        ("human", f"""사용자 요청: {prompt}
+                            첨부된 파일 정보:
+                            - 파일명: {current_program.get('fileName', '')}
+                            - 파일 형식: {current_program.get('fileType', '')}
+                            - 파일 내용:
+                            {current_program.get('context', '')}"""),
+                        ("human", self.suffix)
+                    ])
+            else:
+                prompt_template = ChatPromptTemplate.from_messages([
+                    ("system", self.prefix),
+                    ("system", """텍스트 생성 전용 AI입니다. 
+                        사용자의 요청에 맞는 자연스러운 텍스트를 생성해주세요."""),
+                    ("human", "{input}"),
+                    ("ai", "{chat_history}"),
+                    ("human", f"사용자 요청: {prompt}"),
+                    ("human", self.suffix)
+                ])
+            
+            llm = ChatOpenAI(model="gpt-4",
+                            api_key=api_key,
+                            temperature=0.5
+                            )
+            
+            chain = LLMChain(
+                llm=llm,
+                prompt=prompt_template,
+                memory=memory,
+                verbose=True
+            )
+            
+            response = chain.predict(input=prompt)
+            
+            return response
         
-        output_parser = StrOutputParser()
-        
-        # 요청 데이터에서 필요한 정보 추출
-        prompt = request_data.get('prompt', '')
-        current_program = request_data.get('current_program')
-        
-        # 프롬프트 템플릿 생성
-        if current_program:
-            prompt_template = ChatPromptTemplate.from_messages([
-                ("system", self.prefix),
-                ("user", f"""사용자 요청: {prompt}
-                    첨부된 파일 정보:
-                    - 파일명: {current_program.get('fileName', '')}
-                    - 파일 형식: {current_program.get('fileType', '')}
-                    - 파일 내용:
-                    {current_program.get('context', '')}"""),
-                ("user", self.suffix)
-            ])
-        else:
-            prompt_template = ChatPromptTemplate.from_messages([
-                ("system", self.prefix),
-                ("user", f"사용자 요청: {prompt}"),
-                ("user", self.suffix)
-            ])
-        
-        llm = ChatOpenAI(model="gpt-4",
-                         api_key=os.getenv("OPENAI_API_KEY"),
-                         temperature=0.5
-                         )
-        
-        chain = prompt_template | llm | output_parser
-        
-        response = chain.invoke({})
-        
-        return response
+        except Exception as e:
+            self.logger.error(f"프롬프트 생성 중 오류 발생: {str(e)}", exc_info=True)
+            raise
         
