@@ -1,113 +1,4 @@
-﻿// using System;
-// using System.Threading.Tasks;
-// using SocketIOClient;
-// using System.Text.Json;
-// using System.IO;
-// using SocketIO.Core;
-
-// class Program
-// {
-//     static async Task(string[] args)
-//     {
-//         var options = new SocketIOOptions
-//         {
-//             Transport = SocketIOClient.Transport.TransportProtocol.WebSocket,
-//             Reconnection = true,
-//             ReconnectionAttempts = 5,
-//             ReconnectionDelay = 1000,
-//             EIO = EngineIO.V4
-//         };
-
-//         var client = new SocketIOClient.SocketIO("http://localhost:5001", options);
-
-//         client.OnConnected += async (sender, e) =>
-//         {
-//             Console.WriteLine("서버에 연결되었습니다.");
-            
-//             // Excel 파일 경로
-//             string excelFilePath = Path.Combine("test_excel_file", "사람정보.xlsx");
-            
-//             if (!File.Exists(excelFilePath))
-//             {
-//                 Console.WriteLine($"Excel 파일을 찾을 수 없습니다: {excelFilePath}");
-//                 return;
-//             }
-
-//             // Excel 파일을 바이트 배열로 읽기
-//             byte[] excelBytes = File.ReadAllBytes(excelFilePath);
-//             string base64Excel = Convert.ToBase64String(excelBytes);
-            
-//             // 테스트용 요청 데이터
-//             var request = new
-//             {
-//                 command = "search_similar_context",
-//                 chat_id = 1,
-//                 prompt = "Excel 데이터 분석",
-//                 request_type = 1, // 1: explain
-//                 description = "사람 정보 데이터 분석",
-//                 current_program = new
-//                 {
-//                     id = 1,
-//                     type = "excel",
-//                     context = "사람 정보"
-//                 },
-//                 target_program = new
-//                 {
-//                     id = 2,
-//                     type = "word",
-//                     context = "분석 보고서"
-//                 },
-//                 file_data = new
-//                 {
-//                     filename = "사람정보.xlsx",
-//                     content = base64Excel,
-//                     content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//                 }
-//             };
-
-//             Console.WriteLine("요청 데이터:");
-//             Console.WriteLine(JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true }));
-            
-//             Console.WriteLine("요청 전송 중...");
-//             await client.EmitAsync("message", request);
-//             Console.WriteLine("요청 전송 완료");
-//         };
-
-//         client.On("message_response", response =>
-//         {
-//             var result = response.GetValue<dynamic>();
-//             Console.WriteLine($"응답 수신:");
-//             Console.WriteLine($"Chat ID: {result.chat_id}");
-//             Console.WriteLine($"Status: {result.status}");
-//             Console.WriteLine($"Response: {result.response}");
-//         });
-
-//         client.OnError += (sender, e) =>
-//         {
-//             Console.WriteLine($"에러 발생: {e}");
-//         };
-
-//         client.OnDisconnected += (sender, e) =>
-//         {
-//             Console.WriteLine("서버와 연결이 끊어졌습니다.");
-//         };
-
-//         try
-//         {
-//             Console.WriteLine("서버 연결 시도 중...");
-//             await client.ConnectAsync();
-//             Console.WriteLine("서버 연결 성공");
-//             Console.WriteLine("종료하려면 아무 키나 누르세요...");
-//             Console.ReadKey();
-//         }
-//         catch (Exception ex)
-//         {
-//             Console.WriteLine($"연결 중 에러 발생: {ex.Message}");
-//         }
-//     }
-// }
-
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Threading;
 using SocketIOClient;
@@ -146,18 +37,31 @@ class Program
             {
                 command = "request_prompt",
                 chat_id = 1,
-                prompt = "이 파일에 적힌 내용을 모두 한글로 변환해줘",
-                request_type = 1, // 1: freestyle, 2: generate_text, 3: explain, 4: summary
+                generated_timestamp = "2025-05-27T02:06:50Z",
+                prompt = "AI모델 분석 내용인데 이 워드에 표에 대한 설명 적어줘.",
+                request_type = 1,
                 current_program = new
                 {
-                    context = "<table style='border-collapse:collapse'><tr><td style='background-color: #FFFF00; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-left: 1px solid #000000'>AA</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000'><u>DD</u></td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000'></td></tr><tr><td style='text-align: left; vertical-align: bottom; border-left: 1px solid #000000'></td><td style='color: #FF0000; text-align: left; vertical-align: bottom'>BB</td><td style='font-size: 14pt; text-align: left; vertical-align: bottom; border-right: 1px solid #000000'><i>AA</i></td></tr><tr><td style='text-align: left; vertical-align: bottom; border-bottom: 1px solid #000000; border-left: 1px solid #000000'></td><td style='text-align: left; vertical-align: bottom; border-bottom: 1px solid #000000'>GG</td><td style='text-align: left; vertical-align: bottom; border-right: 1px solid #000000; border-bottom: 1px solid #000000'></td></tr></table>",
-                    fileId = 21955048185373228UL,     // ulong? (nullable) 파일 고유 아이디
-                    volumeId = 2524257335U,          // uint? (nullable) 드라이브 아이디
-                    fileType = "Excel",             // string
-                    fileName = "test.xlsx",         // string
-                    filePath = "C:\\...\\test.xlsx" // string
+                    context = @"<table style='border-collapse:collapse'><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'><b>제한사항 구분</b></td><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'><b>정확도 하락 원인 분석</b></td><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'><b>테스트케이스 비율 포함 여부</b></td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>건물 지붕 외 설치 대상</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>건물이 존재하지 않은 사진 입력 시(로, 락 등) 인식 정확도 저하</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>O</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>지붕 설치 제한사항</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>지붕의 형태에 따라 계산되는 면적이 다름
+추후 모델 추가 학습 or 분류 모델 도입으로 해결해야 함</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>O</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>다중 건물 설치</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>여러 건물에 걸쳐 계산된 발전량인 경우와 단일 건물만 계산된 발전량인 경우를 구분하기 위한 지표 X
+주변 건물 발전량 계산 누락</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>O</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>이미지 관련 제한사항</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>비지원 위성사진 형식 사용 시 분석 부가</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>X</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>주소 입력 오류</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>부정확한 주소 입력
+위성 미지원 범위 주소
+도로명/지번 주소 혼용 오류 발견</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>X</td></tr></table>",
+                    fileId = 2411,
+                    volumeId = 428019990,
+                    fileType = "Excel",
+                    fileName = "모델별 분석.xlsx",
+                    filePath = @"G:\내 드라이브\H에너지\모델별 분석.xlsx"
                 },
-                target_program = (object)null
+                target_program = new
+                {
+                    context = "다음은 AI 모델 분석에 관한 내용이다.",
+                    fileId = 2359,
+                    volumeId = 428019990,
+                    fileType = "Word",
+                    fileName = "AI 분석 보고서.docx",
+                    filePath = @"G:\내 드라이브\H에너지\AI 분석 보고서.docx"
+                }
             };
 
             // 이벤트 핸들러 설정

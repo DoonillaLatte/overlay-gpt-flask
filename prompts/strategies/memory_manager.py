@@ -25,11 +25,8 @@ class MemoryManager:
         Returns:
             ConversationBufferMemory: 대화 메모리
         """
-        if cls._memory is None:
-            cls._memory = ConversationBufferMemory(
-                memory_key="chat_history",
-                return_messages=True
-            )
+        if cls._instance is None:
+            cls()
         return cls._memory
 
     @classmethod
@@ -37,6 +34,8 @@ class MemoryManager:
         """
         메모리를 초기화합니다.
         """
+        if cls._instance is None:
+            cls()
         cls._memory = ConversationBufferMemory(
             memory_key="chat_history",
             return_messages=True
