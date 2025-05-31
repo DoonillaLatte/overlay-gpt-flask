@@ -130,40 +130,42 @@ class CommandHandler:
         try:
             content = {
                 'chat_id': message.get('chat_id'),
-                'prompt': message.get('prompt'),
-                'request_type': message.get('request_type'),
                 'current_program': message.get('current_program')
             }
             
-            multi_program_id = content['current_program']['fileId']
-            multi_program_type = content['current_program']['fileType']
-            multi_program_context = content['current_program']['context']
+            multi_file_id = content['current_program']['fileId']
+            multi_file_type = content['current_program']['fileType']
+            multi_file_context = content['current_program']['context']
+            multi_volume_id = content['current_program']['volumeId']
             
             # 벡터 데이터베이스에 프로그램 정보 저장
             self.vector_db_service.store_program_info(
-                program_id=multi_program_id,
-                program_type=multi_program_type,
-                program_context=multi_program_context
+                file_id=multi_file_id,
+                file_type=multi_file_type,
+                context=multi_file_context,
+                volume_id=multi_volume_id
             )
             
             # 유사한 프로그램 검색
             similar_programs = self.vector_db_service.search_similar_programs(
-                query=multi_program_context,
+                query=multi_file_context,
                 k=5
             )
             
             # 유사한 프로그램의 ID 리스트 추출
-            similar_program_ids = [program['id'] for program in similar_programs]
+            similar_program_ids = [[program['fileId'], program['volumeId']] for program in similar_programs]
             
             return {
-                'command': 'response_top_workflows',
+                'command': 'response_workflows',
+                'chat_id': content['chat_id'],
                 'similar_program_ids': similar_program_ids,
                 'status': 'success'
             }
         except Exception as e:
             logger.error(f"유사 컨텍스트 검색 중 오류 발생: {str(e)}")
             return {
-                'command': 'response_top_workflows',
+                'command': 'response_workflows',
+                'chat_id': content['chat_id'],
                 'message': f'유사한 프로그램 검색 중 오류 발생: {str(e)}',
                 'status': 'error'
             }

@@ -262,7 +262,9 @@ class VectorDatabase:
                         "text": self.metadata_store[metadata_id]["text"],
                         "title": self.metadata_store[metadata_id]["title"],
                         "metadata": self.metadata_store[metadata_id]["metadata"],
-                        "similarity_score": float(1 / (1 + distances[0][i]))
+                        "similarity_score": float(1 / (1 + distances[0][i])),
+                        "fileId": self.metadata_store[metadata_id]["metadata"].get("fileId", None),
+                        "volumeId": self.metadata_store[metadata_id]["metadata"].get("volumeId", None)
                     }
                     results.append(result)
             
