@@ -79,15 +79,18 @@ class CommandHandler:
                     4: "summary"
                 }.get(content['request_type'], "freestyle")
             
+            strategy = self.prompt_factory.get_strategy(strategy_name)
+            
             # 파일 형식에 따른 예시 검색
             examples = []
-            if content.get('current_program'):
-                current_program = content['current_program']
+            current_program = content.get('current_program') or {}
+            if current_program:
                 file_type = current_program.get('fileType')
                 if file_type:
                     # 파일 형식에 맞는 예시 검색
                     similar_examples = self.vector_db_service.search_similar_programs(
                         query=f"fileType:{file_type}",
+                        file_type=file_type,
                         k=3
                     )
                     examples = [example.get('context', '') for example in similar_examples]
@@ -95,11 +98,16 @@ class CommandHandler:
             # 예시를 content에 추가
             content['examples'] = examples
             
-            strategy = self.prompt_factory.get_strategy(strategy_name)
             response = strategy.generate_prompt(content)
             
             # 제목 생성
-            title = self.vector_db_service._vector_db._generate_title(content['prompt'])
+            title = None
+            file_type = 'excel'  # 기본값으로 excel 사용
+            if current_program and current_program.get('fileType'):
+                file_type = current_program['fileType']
+                
+            vector_db = self.vector_db_service._get_db_by_type(file_type)
+            title = vector_db._generate_title(content['prompt'])
             
             return {
                 'command': f'generated_response',
@@ -117,7 +125,7 @@ class CommandHandler:
                 'status': 'error'
             }
         except Exception as e:
-            logger.error(f"응답 생성 중 오류 발생: {str(e)}")
+            logger.error(f"응답 생성 중 오류 발생: {str(e)}", exc_info=True)
             return {
                 'command': 'generated_response',
                 'chat_id': message.get('chat_id'),
