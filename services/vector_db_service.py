@@ -17,25 +17,49 @@ class VectorDBService:
         self.storage_dir = storage_dir
         # 저장 디렉토리가 없으면 생성
         os.makedirs(storage_dir, exist_ok=True)
-        self._vector_db = VectorDatabase(storage_dir=storage_dir, max_vectors=max_vectors)
+        
+        # 파일 타입별 VectorDB 초기화
+        self._vector_dbs = {
+            'excel': VectorDatabase(storage_dir=os.path.join(storage_dir, "excel_db"), max_vectors=max_vectors),
+            'word': VectorDatabase(storage_dir=os.path.join(storage_dir, "word_db"), max_vectors=max_vectors),
+            'hwp': VectorDatabase(storage_dir=os.path.join(storage_dir, "hwp_db"), max_vectors=max_vectors),
+            'powerpoint': VectorDatabase(storage_dir=os.path.join(storage_dir, "powerpoint_db"), max_vectors=max_vectors)
+        }
+
+    def _get_db_by_type(self, file_type: str) -> VectorDatabase:
+        """
+        파일 타입에 해당하는 VectorDB를 반환합니다.
+        
+        Args:
+            file_type (str): 파일 타입 (excel, word, hwp, powerpoint)
+            
+        Returns:
+            VectorDatabase: 해당 파일 타입의 VectorDB
+        """
+        normalized_type = file_type.lower()
+        if normalized_type not in self._vector_dbs:
+            raise ValueError(f"지원하지 않는 파일 타입입니다: {file_type}")
+        return self._vector_dbs[normalized_type]
 
     def store_program_info(self, file_id: int, file_type: str, context: str, volume_id: int) -> None:
         """
         프로그램 정보를 벡터 데이터베이스에 저장합니다.
-        동일한 program_id가 있는 경우 기존 데이터를 삭제하고 새로운 데이터를 저장합니다.
+        동일한 file_id가 있는 경우 기존 데이터를 삭제하고 새로운 데이터를 저장합니다.
         
         Args:
             file_id (int): 파일 ID
-            file_type (str): 파일 타입 (예: excel, word 등)
+            file_type (str): 파일 타입 (excel, word, hwp, powerpoint)
             context (str): 파일 컨텍스트
             volume_id (int): 볼륨 ID
         """
         try:
-            # 동일한 program_id가 있는지 확인하고 있다면 삭제
+            vector_db = self._get_db_by_type(file_type)
+            
+            # 동일한 file_id가 있는지 확인하고 있다면 삭제
             try:
-                self._vector_db.get_vector(file_id)
-                self._vector_db.delete_vector(file_id)
-                logger.info(f"기존 파일 정보가 삭제되었습니다. ID: {file_id}")
+                vector_db.get_vector(file_id)
+                vector_db.delete_vector(file_id)
+                logger.info(f"기존 파일 정보가 삭제되었습니다. Type: {file_type}, ID: {file_id}")
             except:
                 pass  # 기존 데이터가 없는 경우 무시
             
@@ -43,7 +67,7 @@ class VectorDBService:
             program_info = f"{file_type} {context}"
             
             # 벡터 데이터베이스에 저장
-            self._vector_db.store_vector(
+            vector_db.store_vector(
                 id=file_id,  
                 text=program_info,
                 metadata={
@@ -54,57 +78,75 @@ class VectorDBService:
                 }
             )
             
-            logger.info(f"프로그램 정보가 벡터 DB에 저장되었습니다. ID: {file_id}")
+            logger.info(f"파일 정보가 벡터 DB에 저장되었습니다. Type: {file_type}, ID: {file_id}")
             
         except Exception as e:
             logger.error(f"벡터 DB 저장 중 오류 발생: {str(e)}")
             raise
 
-    def get_program_info(self, file_id: int) -> Dict[str, Any]:
+    def get_program_info(self, file_id: int, file_type: str) -> Dict[str, Any]:
         """
         프로그램 정보를 벡터 데이터베이스에서 조회합니다.
         
         Args:
-            program_id (int): 프로그램 ID
+            file_id (int): 파일 ID
+            file_type (str): 파일 타입 (excel, word, hwp, powerpoint)
             
         Returns:
             Dict[str, Any]: 프로그램 정보 (metadata)
         """
         try:
-            vector_data = self._vector_db.get_vector(file_id)
+            vector_db = self._get_db_by_type(file_type)
+            vector_data = vector_db.get_vector(file_id)
             return vector_data.get("metadata", {})
         except Exception as e:
             logger.error(f"벡터 DB 조회 중 오류 발생: {str(e)}")
             raise
 
-    def delete_program_info(self, file_id: int) -> None:
+    def delete_program_info(self, file_id: int, file_type: str) -> None:
         """
         파일 정보를 벡터 데이터베이스에서 삭제합니다.
         
         Args:
             file_id (int): 파일 ID
+            file_type (str): 파일 타입 (excel, word, hwp, powerpoint)
         """
         try:
-            self._vector_db.delete_vector(file_id)
-            logger.info(f"파일 정보가 벡터 DB에서 삭제되었습니다. ID: {file_id}")
+            vector_db = self._get_db_by_type(file_type)
+            vector_db.delete_vector(file_id)
+            logger.info(f"파일 정보가 벡터 DB에서 삭제되었습니다. Type: {file_type}, ID: {file_id}")
         except Exception as e:
             logger.error(f"벡터 DB 삭제 중 오류 발생: {str(e)}")
             raise
 
-    def search_similar_programs(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
+    def search_similar_programs(self, query: str, file_type: str = None, k: int = 5) -> List[Dict[str, Any]]:
         """
         유사한 파일을 검색합니다.
         
         Args:
             query (str): 검색 쿼리
+            file_type (str, optional): 특정 파일 타입만 검색할 경우 지정
             k (int): 반환할 결과 수
             
         Returns:
             List[Dict[str, Any]]: 유사한 파일 정보 리스트
         """
         try:
-            results = self._vector_db.search_similar(query, k)
-            logger.info(f"유사 파일 검색 완료. 쿼리: {query}, 결과 수: {len(results)}")
+            if file_type:
+                # 특정 파일 타입에서만 검색
+                vector_db = self._get_db_by_type(file_type)
+                results = vector_db.search_similar(query, k)
+            else:
+                # 모든 파일 타입에서 검색
+                all_results = []
+                for db_type, vector_db in self._vector_dbs.items():
+                    results = vector_db.search_similar(query, k)
+                    all_results.extend(results)
+                
+                # 유사도 점수로 정렬하고 상위 k개 선택
+                results = sorted(all_results, key=lambda x: x['similarity_score'], reverse=True)[:k]
+            
+            logger.info(f"유사 파일 검색 완료. 파일 타입: {file_type if file_type else '전체'}, 쿼리: {query}, 결과 수: {len(results)}")
             return results
         except Exception as e:
             logger.error(f"유사 파일 검색 중 오류 발생: {str(e)}")

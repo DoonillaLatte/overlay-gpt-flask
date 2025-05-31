@@ -130,6 +130,7 @@ class CommandHandler:
         try:
             content = {
                 'chat_id': message.get('chat_id'),
+                'file_type': message.get('file_type'),
                 'current_program': message.get('current_program')
             }
             
@@ -137,6 +138,7 @@ class CommandHandler:
             multi_file_type = content['current_program']['fileType']
             multi_file_context = content['current_program']['context']
             multi_volume_id = content['current_program']['volumeId']
+            request_file_type = content['file_type']
             
             # 벡터 데이터베이스에 프로그램 정보 저장
             self.vector_db_service.store_program_info(
@@ -149,6 +151,7 @@ class CommandHandler:
             # 유사한 프로그램 검색
             similar_programs = self.vector_db_service.search_similar_programs(
                 query=multi_file_context,
+                file_type=request_file_type,
                 k=5
             )
             
