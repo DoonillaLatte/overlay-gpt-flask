@@ -97,7 +97,7 @@ class FreestylePrompt():
                     ("human", self.suffix)
                 ])
             
-            llm = ChatOpenAI(model="gpt-4",
+            llm = ChatOpenAI(model="gpt-4.1-nano",
                             api_key=api_key,
                             temperature=0.5
                             )
