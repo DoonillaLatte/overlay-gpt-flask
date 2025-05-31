@@ -37,6 +37,7 @@ class CommandHandler:
             else:
                 return {
                     'command': f'generated_response',
+                    'chat_id': message.get('chat_id'),
                     'message': f'지원하지 않는 명령어입니다: {command}',
                     'status': 'error'
                 }
@@ -44,6 +45,8 @@ class CommandHandler:
         except Exception as e:
             logger.error(f"명령어 처리 중 오류 발생: {str(e)}", exc_info=True)
             return {
+                'command': f'generated_response',
+                'chat_id': message.get('chat_id'),
                 'message': str(e),
                 'status': 'error'
             }
@@ -100,6 +103,7 @@ class CommandHandler:
             
             return {
                 'command': f'generated_response',
+                'chat_id': message.get('chat_id'),
                 'title': title,
                 'message': response,
                 'status': 'success'
@@ -108,6 +112,7 @@ class CommandHandler:
             logger.error(f"잘못된 요청: {str(e)}")
             return {
                 'command': 'generated_response',
+                'chat_id': message.get('chat_id'),
                 'message': str(e),
                 'status': 'error'
             }
@@ -115,6 +120,7 @@ class CommandHandler:
             logger.error(f"응답 생성 중 오류 발생: {str(e)}")
             return {
                 'command': 'generated_response',
+                'chat_id': message.get('chat_id'),
                 'message': f'처리 중 오류가 발생했습니다: {str(e)}',
                 'status': 'error'
             }
