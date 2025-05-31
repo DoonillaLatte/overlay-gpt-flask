@@ -59,7 +59,7 @@ class ConvertPrompt():
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
                         ("system", """코드 변환 전용 AI입니다. 
-                            소스 코드의 맥락을 분석하고 사용자의 요청에 따라 새로운 맥락을 생성해주세요.
+                            소스 코드의 맥락을 분석하고 사용자의 요청에 따라 새로운 맥락을 생성하거나 수정해주세요.
                             코드만 출력해주세요."""),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 형식의 예시입니다. 
                             이 예시들을 참고하여 요청에 응답해주세요:
@@ -86,7 +86,7 @@ class ConvertPrompt():
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
                         ("system", """코드 변환 전용 AI입니다. 
-                            소스 코드의 맥락을 분석하고 사용자의 요청에 따라 새로운 맥락을 생성해주세요.
+                            소스 코드의 맥락을 분석하고 사용자의 요청에 따라 새로운 맥락을 생성하거나 수정해주세요.
                             코드만 출력해주세요."""),
                         ("human", "{input}"),
                         ("ai", "{chat_history}"),
@@ -109,7 +109,7 @@ class ConvertPrompt():
                 prompt_template = ChatPromptTemplate.from_messages([
                     ("system", self.prefix),
                     ("system", """코드 생성 전용 AI입니다. 
-                        사용자의 요청에 따라 새로운 코드를 생성해주세요.
+                        사용자의 요청에 따라 새로운 코드를 생성하거나 수정해주세요.
                         코드만 출력해주세요."""),
                     ("human", "{input}"),
                     ("ai", "{chat_history}"),
