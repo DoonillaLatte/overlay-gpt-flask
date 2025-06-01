@@ -7,6 +7,7 @@ from typing import Dict, Any
 from pydantic import BaseModel
 from services.vector_db_service import VectorDBService
 from services.command_handler import CommandHandler
+from prompts.strategies.memory_manager import MemoryManager
 
 # 로깅 설정
 logging.basicConfig(
@@ -36,6 +37,10 @@ socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=
 prompt_factory = PromptFactory()
 vector_db_service = VectorDBService(storage_dir="data/vector_db")
 command_handler = CommandHandler(vector_db_service=vector_db_service, prompt_factory=prompt_factory)
+
+# 메모리 매니저 초기화
+MemoryManager.initialize(base_dir="data/memory")
+logger.info("메모리 매니저가 초기화되었습니다.")
 
 @socketio.on('connect')
 def handle_connect():

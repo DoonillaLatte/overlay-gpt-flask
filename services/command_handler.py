@@ -76,7 +76,8 @@ class CommandHandler:
                     1: "freestyle",
                     2: "generate_text",
                     3: "explain",
-                    4: "summary"
+                    4: "summary",
+                    5: "convert_prompt"
                 }.get(content['request_type'], "freestyle")
             
             strategy = self.prompt_factory.get_strategy(strategy_name)
@@ -102,7 +103,7 @@ class CommandHandler:
             
             # 제목 생성
             title = None
-            file_type = 'excel'  # 기본값으로 excel 사용
+            file_type = 'word'  # 기본값으로 word 사용
             if current_program and current_program.get('fileType'):
                 file_type = current_program['fileType']
                 

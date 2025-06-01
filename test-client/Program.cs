@@ -36,31 +36,30 @@ class Program
             var request = new
             {
                 command = "request_prompt",
-                chat_id = 1,
-                generated_timestamp = "2025-05-27T02:06:50Z",
-                prompt = "AI모델 분석 내용인데 이 워드에 표에 대한 설명 적어줘.",
-                request_type = 1,
+                generated_timestamp = "2025-06-01T06:56:07Z", 
+                chat_id = -2,
+                title = "",
+                prompt = "이걸 모음집에 모음집의 형식을 맞춰서 추가해줘",
+                request_type = 5, // freestyle
                 current_program = new
                 {
-                    context = @"<table style='border-collapse:collapse'><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'><b>제한사항 구분</b></td><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'><b>정확도 하락 원인 분석</b></td><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'><b>테스트케이스 비율 포함 여부</b></td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>건물 지붕 외 설치 대상</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>건물이 존재하지 않은 사진 입력 시(로, 락 등) 인식 정확도 저하</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>O</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>지붕 설치 제한사항</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>지붕의 형태에 따라 계산되는 면적이 다름
-추후 모델 추가 학습 or 분류 모델 도입으로 해결해야 함</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>O</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>다중 건물 설치</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>여러 건물에 걸쳐 계산된 발전량인 경우와 단일 건물만 계산된 발전량인 경우를 구분하기 위한 지표 X
-주변 건물 발전량 계산 누락</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>O</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>이미지 관련 제한사항</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>비지원 위성사진 형식 사용 시 분석 부가</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>X</td></tr><tr><td style='background-color: #C0CDEF; text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>주소 입력 오류</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>부정확한 주소 입력
-위성 미지원 범위 주소
-도로명/지번 주소 혼용 오류 발견</td><td style='text-align: left; vertical-align: bottom; border-top: 1px solid #000000; border-right: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000'>X</td></tr></table>",
-                    fileId = 2411,
-                    volumeId = 428019990,
-                    fileType = "Excel",
-                    fileName = "모델별 분석.xlsx",
-                    filePath = @"G:\내 드라이브\H에너지\모델별 분석.xlsx"
+                    context = "\u003Cspan style=\u0027font-size: 15pt; color: #000000\u0027\u003E\u003Cb\u003E\uBCC4 \uD5E4\uB294 \uBC24\u003C/b\u003E\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027font-size: 15pt; color: #000000\u0027\u003E\u003Cb\u003E\u003C/b\u003E\u003C/span\u003E\u003Cspan style=\u0027font-size: 14pt; color: #000000\u0027\u003E\uC724\uB3D9\uC8FC\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027font-size: 14pt; color: #000000\u0027\u003E\u003C/span\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uACC4\uC808\uC774 \uC9C0\uB098 \uAC00\uB294 \uD558\uB298\uC5D0\uB294\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uAC00\uC744\uB85C \uAC00\uB4DD \uCC28 \uC788\uC2B5\uB2C8\uB2E4.\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\u200B\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uB098\uB294 \uC544\uBB34 \uAC71\uC815\uB3C4 \uC5C6\uC774\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uAC00\uC744 \uC18D\uC758 \uBCC4\uB4E4\uC744 \uB2E4 \uD5E4\uC77C \uB4EF\uD569\uB2C8\uB2E4.\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\u200B\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uAC00\uC2B4\uC18D\uC5D0 \uD558\uB098 \uB458 \uC0C8\uACA8\uC9C0\uB294 \uBCC4\uC744\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uC774\uC81C \uB2E4 \uBABB \uD5E4\uB294 \uAC83\uC740\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uC26C\uC774 \uC544\uCE68\uC774 \uC624\uB294 \uAE4C\uB2ED\uC774\uC694,\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uB0B4\uC77C \uBC24\uC774 \uB0A8\uC740 \uAE4C\uB2ED\uC774\uC694,\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uC544\uC9C1 \uB098\uC758 \uCCAD\uCD98\uC774 \uB2E4\uD558\uC9C0 \uC54A\uC740 \uAE4C\uB2ED\uC785\uB2C8\uB2E4.\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\u200B\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uBCC4 \uD558\uB098\uC5D0 \uCD94\uC5B5\uACFC\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uBCC4 \uD558\uB098\uC5D0 \uC0AC\uB791\uACFC\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uBCC4 \uD558\uB098\uC5D0 \uC4F8\uC4F8\uD568\uACFC\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uBCC4 \uD558\uB098\uC5D0 \uB3D9\uACBD\uACFC\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uBCC4 \uD558\uB098\uC5D0 \uC2DC\uC640\u003C/span\u003E\u003Cbr\u003E\u003Cspan style=\u0027color: #000000\u0027\u003E\uBCC4 \uD558\uB098\uC5D0 \uC5B4\uBA38\uB2C8, \uC5B4\uBA38\uB2C8\u003C/span\u003E\u003Cbr\u003E\u003Cbr\u003E",   
+                    fileId = 5629499534453704,
+                    volumeId = 3163409098,
+                    fileType = "Word",
+                    fileName = "\uBCC4 \uD5E4\uB294 \uBC24.docx",
+                    filePath = @"C:\Users\kjbdd\OneDrive\바탕 화면\test data\case 1 word - word\별 헤는 밤.docx",
+                    position = "1-20",
+                    generated_context = ""
                 },
                 target_program = new
                 {
-                    context = "다음은 AI 모델 분석에 관한 내용이다.",
-                    fileId = 2359,
-                    volumeId = 428019990,
+                    context = "<span style='font-size: 15pt; color: #000000'> <굴뚝>  산골짜기 오막살이 낮은 굴뚝엔몽기몽기 웨인연기 대낮에 솟나,</span><br><span style='font-size: 15pt; color: #000000'></span><span style='font-size: 14pt; color: #000000'><돌아와 보는 밤>세상으로부터 돌아오듯이 이제 내 좁은 방에 돌아와불을 끄옵니다. 불을 켜두는 것은 너무나 피로롭은일이옵니다. 그것은 낮의 연장이옵기에</span><br><br><span style='font-size: 14pt; color: #000000'><또 다른 고향> 고향에 돌아온 날 밤에 내 백골이 따라와 한방에 누웠다 </span><br><br><span style='font-size: 14pt; color: #000000'><무서운 시간>거 나를 부르는 것이 누구요,가랑잎 이파리 푸르러 나오는 그늘인데,나 아직 여기 호흡이 남아 있소.</span><br><br><span style='font-size: 14pt; color: #000000'><바다> 실어다 뿌리는 바람처럼 씨원타. </span><br><br><span style='font-size: 14pt; color: #000000'><봄> 봄이 혈관 속에 시내처럼 흘러돌, 돌, 시내 가차운 언덕에개나리, 진달래, 노-란 배추꽃,</span><br>",   
+                    fileId = 25895697857580618,
+                    volumeId = 3163409098,
                     fileType = "Word",
-                    fileName = "AI 분석 보고서.docx",
-                    filePath = @"G:\내 드라이브\H에너지\AI 분석 보고서.docx"
+                    fileName = "\uC724\uB3D9\uC8FC \uC2DC \uBAA8\uC74C\uC9D1.docx",
+                    filePath = "C:\\Users\\kjbdd\\OneDrive\\\uBC14\uD0D5 \uD654\uBA74\\test data\\case 1 word - word\\\uC724\uB3D9\uC8FC \uC2DC \uBAA8\uC74C\uC9D1.docx",
                 }
             };
 
@@ -145,7 +144,7 @@ class Program
                 {
                     command = "request_prompt",
                     chat_id = 1,  // chat_id를 1로 유지
-                    prompt = "방금 내가 뭐라고 물어봤지?",
+                    prompt = "지금까지 내가 물어본게 어떤 게 있어?",
                     request_type = 1 // freestyle
                 };
 
