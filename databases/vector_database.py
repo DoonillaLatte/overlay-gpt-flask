@@ -76,7 +76,7 @@ class VectorDatabase:
             제목:"""
 
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4.1-mini",
                 messages=[
                     {"role": "system", "content": "당신은 텍스트의 핵심을 정확하게 파악하여 간단한 제목으로 만드는 전문가입니다."},
                     {"role": "user", "content": prompt}

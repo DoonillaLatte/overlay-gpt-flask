@@ -25,8 +25,7 @@ class ConvertPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, 요청에 따라 대상 파일의 어휘/문맥/형식에 맞는 내용이 되도록 html코드를 수정 후 출력해주세요."
-        self.suffix = suffix or "답변:"
+        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 '대상 파일'의 어휘/문맥/형식에 적절하게 html코드를 수정 후 출력해주세요."
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
@@ -67,7 +66,7 @@ class ConvertPrompt():
                         ("ai", "{chat_history}"),
                         ("human", f"""사용자 요청: {prompt}
                             
-                            소스 파일 정보:
+                            주어진 파일 정보:
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
@@ -78,7 +77,6 @@ class ConvertPrompt():
                             - 파일 형식: {target_program.get('fileType', '')}
                             - 파일 내용:
                             {target_program.get('context', '')}"""),
-                        ("human", self.suffix)
                     ])
                 else:
                     prompt_template = ChatPromptTemplate.from_messages([
@@ -88,7 +86,7 @@ class ConvertPrompt():
                         ("ai", "{chat_history}"),
                         ("human", f"""사용자 요청: {prompt}
                             
-                            소스 파일 정보:
+                            주어진 파일 정보:
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
@@ -111,7 +109,7 @@ class ConvertPrompt():
                     ("human", self.suffix)
                 ])
             
-            llm = ChatOpenAI(model="gpt-4.1-nano",
+            llm = ChatOpenAI(model="gpt-4.1",
                             api_key=api_key,
                             temperature=0.5
                             )

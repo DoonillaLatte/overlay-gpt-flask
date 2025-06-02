@@ -2,6 +2,7 @@ from typing import Dict, Any, List
 import logging
 from databases.vector_database import VectorDatabase
 import os
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class VectorDBService:
             'hwp': VectorDatabase(storage_dir=os.path.join(storage_dir, "hwp_db"), max_vectors=max_vectors),
             'powerpoint': VectorDatabase(storage_dir=os.path.join(storage_dir, "powerpoint_db"), max_vectors=max_vectors)
         }
+        logger.debug(f"VectorDBService 초기화 완료. 저장 디렉토리: {storage_dir}, 최대 벡터 수: {max_vectors}")
 
     def _get_db_by_type(self, file_type: str) -> VectorDatabase:
         """
@@ -57,9 +59,10 @@ class VectorDBService:
             
             # 동일한 file_id가 있는지 확인하고 있다면 삭제
             try:
-                vector_db.get_vector(file_id)
+                existing_data = vector_db.get_vector(file_id)
                 vector_db.delete_vector(file_id)
                 logger.info(f"기존 파일 정보가 삭제되었습니다. Type: {file_type}, ID: {file_id}")
+                logger.debug(f"삭제된 기존 데이터: {json.dumps(existing_data, ensure_ascii=False)}")
             except:
                 pass  # 기존 데이터가 없는 경우 무시
             
@@ -79,6 +82,7 @@ class VectorDBService:
             )
             
             logger.info(f"파일 정보가 벡터 DB에 저장되었습니다. Type: {file_type}, ID: {file_id}")
+            logger.debug(f"저장된 데이터: {json.dumps({'text': program_info, 'metadata': {'type': file_type, 'context': context, 'fileId': file_id, 'volumeId': volume_id}}, ensure_ascii=False)}")
             
         except Exception as e:
             logger.error(f"벡터 DB 저장 중 오류 발생: {str(e)}")
@@ -132,19 +136,24 @@ class VectorDBService:
             List[Dict[str, Any]]: 유사한 파일 정보 리스트
         """
         try:
+            logger.debug(f"유사 파일 검색 시작. 쿼리: {query}, 파일 타입: {file_type}, k: {k}")
+            
             if file_type:
                 # 특정 파일 타입에서만 검색
                 vector_db = self._get_db_by_type(file_type)
                 results = vector_db.search_similar(query, k)
+                logger.debug(f"특정 파일 타입({file_type}) 검색 결과: {json.dumps(results, ensure_ascii=False)}")
             else:
                 # 모든 파일 타입에서 검색
                 all_results = []
                 for db_type, vector_db in self._vector_dbs.items():
                     results = vector_db.search_similar(query, k)
+                    logger.debug(f"파일 타입 {db_type} 검색 결과: {json.dumps(results, ensure_ascii=False)}")
                     all_results.extend(results)
                 
                 # 유사도 점수로 정렬하고 상위 k개 선택
                 results = sorted(all_results, key=lambda x: x['similarity_score'], reverse=True)[:k]
+                logger.debug(f"전체 검색 결과 (상위 {k}개): {json.dumps(results, ensure_ascii=False)}")
             
             logger.info(f"유사 파일 검색 완료. 파일 타입: {file_type if file_type else '전체'}, 쿼리: {query}, 결과 수: {len(results)}")
             return results
