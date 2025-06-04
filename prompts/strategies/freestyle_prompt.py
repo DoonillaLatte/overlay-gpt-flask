@@ -43,7 +43,6 @@ class FreestylePrompt():
             # 요청 데이터에서 필요한 정보 추출
             prompt = request_data.get('prompt', '')
             current_program = request_data.get('current_program')
-            target_program = request_data.get('target_program')
             examples = request_data.get('examples', [])
             
             # MemoryManager를 통해 메모리 가져오기
@@ -58,7 +57,7 @@ class FreestylePrompt():
                         ("system", self.prefix),
                         ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 형식의 예시입니다. 
-                            이 예시들을 참고하여 요청에 응답해주세요:
+                            이 예시들을 문법만을 참고하여 요청을 문법에 맞추어 응답해주세요:
                             
                             {examples_text}"""),
                         ("human", "{input}"),
@@ -70,12 +69,7 @@ class FreestylePrompt():
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
                             {current_program.get('context', '')}
-                            
-                            대상 파일 정보:
-                            - 파일명: {target_program.get('fileName', '')}
-                            - 파일 형식: {target_program.get('fileType', '')}
-                            - 파일 내용:
-                            {target_program.get('context', '')}"""),
+                            """)
                     ])
                 else:
                     prompt_template = ChatPromptTemplate.from_messages([
@@ -90,12 +84,7 @@ class FreestylePrompt():
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
                             {current_program.get('context', '')}
-                            
-                            대상 파일 정보:
-                            - 파일명: {target_program.get('fileName', '')}
-                            - 파일 형식: {target_program.get('fileType', '')}
-                            - 파일 내용:
-                            {target_program.get('context', '')}""")
+                            """)
                     ])
             else:
                 prompt_template = ChatPromptTemplate.from_messages([

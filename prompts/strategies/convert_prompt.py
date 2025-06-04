@@ -58,7 +58,7 @@ class ConvertPrompt():
                         ("system", self.prefix),
                         ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 형식의 예시입니다. 
-                            이 예시들을 참고하여 요청에 응답해주세요:
+                            이 예시들을 문법만을 참고하여 요청을 문법에 맞추어 응답해주세요:
                             
                             {examples_text}"""),
                         ("human", "{input}"),
