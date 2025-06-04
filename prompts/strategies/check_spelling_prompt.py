@@ -95,8 +95,7 @@ class CheckSpellingPrompt():
                             - 파일명: {target_program.get('fileName', '')}
                             - 파일 형식: {target_program.get('fileType', '')}
                             - 파일 내용:
-                            {target_program.get('context', '')}"""),
-                        ("human", self.suffix)
+                            {target_program.get('context', '')}""")
                     ])
             else:
                 prompt_template = ChatPromptTemplate.from_messages([
@@ -104,8 +103,7 @@ class CheckSpellingPrompt():
                     ("system", """코드 생성 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                     ("human", "{input}"),
                     ("ai", "{chat_history}"),
-                    ("human", f"사용자 요청: {prompt}"),
-                    ("human", self.suffix)
+                    ("human", f"사용자 요청: {prompt}")
                 ])
             
             llm = ChatOpenAI(model="gpt-3.5-turbo",

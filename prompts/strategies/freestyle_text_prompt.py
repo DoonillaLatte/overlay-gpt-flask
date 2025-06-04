@@ -14,7 +14,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 
 @register_prompt("freestyle_text")
 class FreestyleTextPrompt():
-    def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None, suffix: Optional[str] = None):
+    def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None):
         """
         프롬프트 생성을 위한 클래스 초기화
         
@@ -24,8 +24,7 @@ class FreestyleTextPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "다음 요청에 맞는 텍스트를 작성해주세요:"
-        self.suffix = suffix or "작성된 내용:"
+        self.prefix = prefix or "다음 요청에 맞는 텍스트를 작성해주세요:" 
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
@@ -69,8 +68,7 @@ class FreestyleTextPrompt():
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
-                            {current_program.get('context', '')}"""),
-                        ("human", self.suffix)
+                            {current_program.get('context', '')}""")
                     ])
                 else:
                     prompt_template = ChatPromptTemplate.from_messages([
@@ -84,16 +82,14 @@ class FreestyleTextPrompt():
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용 (HTML 마크업):
-                            {current_program.get('context', '')}"""),
-                        ("human", self.suffix)
+                            {current_program.get('context', '')}""")
                     ])
             else:
                 prompt_template = ChatPromptTemplate.from_messages([
                     ("system", self.prefix),
                     ("human", "{input}"),
                     ("ai", "{chat_history}"),
-                    ("human", f"사용자 요청: {prompt}"),
-                    ("human", self.suffix)
+                    ("human", f"사용자 요청: {prompt}")
                 ])
             
             llm = ChatOpenAI(model="gpt-4.1-nano",

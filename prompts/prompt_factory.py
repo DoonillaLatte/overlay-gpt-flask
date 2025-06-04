@@ -18,7 +18,7 @@ class PromptFactory:
         self.register_strategy("generate_text", GenerateTextPrompt)
         self.register_strategy("modify_text", ModifyTextPrompt )
         self.register_strategy("check_spelling", CheckSpellingPrompt)
-        self.register_strategy("convert_prompt", ConvertPrompt)
+        self.register_strategy("convert", ConvertPrompt)
         
     def register_strategy(self, name: str, strategy: Type[PromptStrategy]):
         self._strategies[name] = strategy
