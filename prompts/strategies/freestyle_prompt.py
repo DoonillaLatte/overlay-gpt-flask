@@ -24,7 +24,11 @@ class FreestylePrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, 프롬프트 요청에 적절하게 html코드를 작성 후 출력해주세요. 출력되는 내용은 반드시 html마크업 방식이어야 합니다."
+        self.prefix = prefix or """
+        주어진 파일의 형식의 html코드를 분석하여, 프롬프트 요구를 충족하도록 html코드를 작성 후 출력해주세요. 
+        내용 추가, 내용 수정, 내용 삭제 등 프롬프트 요구에 맞추어 내용을 작성해주세요.
+        출력되는 내용은 반드시 html마크업 방식이어야 합니다.
+        """
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
@@ -58,7 +62,7 @@ class FreestylePrompt():
                         ("system", self.prefix),
                         ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 형식의 예시입니다. 
-                            이 예시들을 문법만을 참고하여 요청을 문법에 맞추어 응답해주세요:
+                            이 예시들의 마크업 문법만을 참고하여 요청을 문법에 맞추어 응답해주세요:
                             
                             {examples_text}"""),
                         ("human", "{input}"),
@@ -98,7 +102,7 @@ class FreestylePrompt():
                     ("human", f"사용자 요청: {prompt}")
                 ])
             
-            llm = ChatOpenAI(model="gpt-3.5-turbo",
+            llm = ChatOpenAI(model="gpt-4.1",
                             api_key=api_key,
                             temperature=0.5
                             )

@@ -24,7 +24,11 @@ class ModifyTextPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 적절하게 html코드를 수정 후 출력해주세요. 기존의 내용에서 요청 데이터를 기반으로 수정이 되어야 합니다. 출력되는 내용은 반드시 html마크업 방식이어야 합니다."
+        self.prefix = prefix or """
+        주어진 파일의 형식의 코드 내용을 분석하여, 프롬프트 요청에 따라 적절하게 내용을 수정 후 html 코드로 출력해주세요. 
+        기존의 내용에서 요청 데이터를 기반으로 수정이 되어야 합니다. 
+        출력되는 내용은 반드시 html 마크업 방식이어야 합니다.
+        """
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
@@ -98,7 +102,7 @@ class ModifyTextPrompt():
                     ("human", f"사용자 요청: {prompt}")
                 ])
             
-            llm = ChatOpenAI(model="gpt-3.5-turbo",
+            llm = ChatOpenAI(model="gpt-4.1",
                             api_key=api_key,
                             temperature=0.5
                             )
