@@ -1,5 +1,6 @@
 from typing import Dict, Any
 import logging
+import html
 from .vector_db_service import VectorDBService
 from databases.vector_database import VectorDatabase
 from prompts.prompt_factory import PromptFactory
@@ -101,6 +102,9 @@ class CommandHandler:
             content['examples'] = examples
             
             response = strategy.generate_prompt(content)
+            
+            # HTML 엔티티 디코딩
+            response = html.unescape(response)
             
             # 제목 생성
             title = None
