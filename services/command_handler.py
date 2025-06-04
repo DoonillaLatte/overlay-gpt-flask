@@ -27,7 +27,7 @@ class CommandHandler:
             # 명령어별 처리 함수 매핑
             command_handlers = {
                 'request_prompt': self._handle_response,
-                'request_top_workflows': self._handle_request_top_workflows
+                'get_workflows': self._handle_request_top_workflows
             }
             
             # 매핑된 핸들러 실행
