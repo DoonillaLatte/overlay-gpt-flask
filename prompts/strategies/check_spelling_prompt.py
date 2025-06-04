@@ -12,21 +12,19 @@ logger = logging.getLogger(__name__)
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-@register_prompt("explain")
-class ExplainPrompt():
-    def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None, suffix: Optional[str] = None):
+@register_prompt("check_spelling")
+class CheckSpellingPrompt():
+    def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None):
         """
         프롬프트 생성을 위한 클래스 초기화
         
         Args:
             prefix (Optional[str]): 프롬프트 앞에 추가할 텍스트
-            suffix (Optional[str]): 프롬프트 뒤에 추가할 텍스트
             user_input (Optional[str]): 사용자 입력
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "다음 내용을 설명해주세요:"
-        self.suffix = suffix or "설명:"
+        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, html의 내용 중 올바르지 않은 맞춤법을 찾아 수정해주세요. 생략되는 내용이 생겨서는 안됩니다."
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
@@ -45,6 +43,7 @@ class ExplainPrompt():
             # 요청 데이터에서 필요한 정보 추출
             prompt = request_data.get('prompt', '')
             current_program = request_data.get('current_program')
+            target_program = request_data.get('target_program')
             examples = request_data.get('examples', [])
             
             # MemoryManager를 통해 메모리 가져오기
@@ -57,46 +56,59 @@ class ExplainPrompt():
                     examples_text = "\n\n".join([f"예시 {i+1}:\n{example}" for i, example in enumerate(examples)])
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
-                        ("system", """코드의 구조와 내용을 파악하고 요청에 맞추어 설명해주세요."""),
-                        ("system", f"""다음은 코드 설명 예시입니다. 
+                        ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
+                        ("system", f"""다음은 {current_program.get('fileType', '')} 파일 문법과 형식의 예시입니다. 
                             이 예시들을 참고하여 요청에 응답해주세요:
                             
                             {examples_text}"""),
                         ("human", "{input}"),
                         ("ai", "{chat_history}"),
                         ("human", f"""사용자 요청: {prompt}
-                            첨부된 파일 정보:
+                            
+                            주어진 파일 정보:
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
-                            {current_program.get('context', '')}"""),
-                        ("human", self.suffix)
+                            {current_program.get('context', '')}
+                            
+                            대상 파일 정보:
+                            - 파일명: {target_program.get('fileName', '')}
+                            - 파일 형식: {target_program.get('fileType', '')}
+                            - 파일 내용:
+                            {target_program.get('context', '')}"""),
                     ])
                 else:
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
-                        ("system", """코드의 구조와 내용을 파악하고 요청에 맞추어 설명해주세요."""),
+                        ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                         ("human", "{input}"),
                         ("ai", "{chat_history}"),
                         ("human", f"""사용자 요청: {prompt}
-                            첨부된 파일 정보:
+                            
+                            주어진 파일 정보:
                             - 파일명: {current_program.get('fileName', '')}
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
-                            {current_program.get('context', '')}"""),
+                            {current_program.get('context', '')}
+                            
+                            대상 파일 정보:
+                            - 파일명: {target_program.get('fileName', '')}
+                            - 파일 형식: {target_program.get('fileType', '')}
+                            - 파일 내용:
+                            {target_program.get('context', '')}"""),
                         ("human", self.suffix)
                     ])
             else:
                 prompt_template = ChatPromptTemplate.from_messages([
                     ("system", self.prefix),
-                    ("system", """코드의 구조와 내용을 파악하고 요청에 맞추어 설명해주세요."""),
+                    ("system", """코드 생성 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                     ("human", "{input}"),
                     ("ai", "{chat_history}"),
                     ("human", f"사용자 요청: {prompt}"),
                     ("human", self.suffix)
                 ])
             
-            llm = ChatOpenAI(model="gpt-4.1-nano",
+            llm = ChatOpenAI(model="gpt-3.5-turbo",
                             api_key=api_key,
                             temperature=0.5
                             )
@@ -115,4 +127,3 @@ class ExplainPrompt():
         except Exception as e:
             self.logger.error(f"프롬프트 생성 중 오류 발생: {str(e)}", exc_info=True)
             raise
-        

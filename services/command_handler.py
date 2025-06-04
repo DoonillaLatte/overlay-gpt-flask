@@ -70,14 +70,15 @@ class CommandHandler:
             
             # target_program이 있는 경우 convert_prompt 사용
             if content.get('target_program'):
-                strategy_name = "convert_prompt"
+                strategy_name = "convert"
             else:
                 strategy_name = {
-                    1: "freestyle",
-                    2: "generate_text",
-                    3: "explain",
-                    4: "summary",
-                    5: "convert_prompt"
+                    1: "freestyle",         #html 마크업으로 자유 작성
+                    2: "generate_text",     #파일의 내용 추가
+                    3: "modify_text",       #파일의 내용 수정
+                    4: "check_spelling",    #파일의 내용 맞춤법 검사
+                    5: "convert",           #주어진 파일을 근거로 대상 파일의 내용 변환
+                    6: "freestyle_text"     #html 코드가 아닌 텍스트 형식의 리턴
                 }.get(content['request_type'], "freestyle")
             
             strategy = self.prompt_factory.get_strategy(strategy_name)

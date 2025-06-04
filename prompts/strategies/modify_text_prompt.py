@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-@register_prompt("generate_text")
-class GenerateTextPrompt():
+@register_prompt("modify_text")
+class ModifyTextPrompt():
     def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None):
         """
         프롬프트 생성을 위한 클래스 초기화
@@ -24,7 +24,7 @@ class GenerateTextPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 적절하게 html코드를 작성 후 출력해주세요. 생략되는 내용이 생겨서는 안됩니다."
+        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 적절하게 html코드를 수정 후 출력해주세요. 생략되는 내용이 생겨서는 안됩니다."
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:

@@ -12,20 +12,19 @@ logger = logging.getLogger(__name__)
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-@register_prompt("convert_prompt")
+@register_prompt("convert")
 class ConvertPrompt():
-    def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None, suffix: Optional[str] = None):
+    def __init__(self, user_input: Optional[str] = None, prefix: Optional[str] = None):
         """
         프롬프트 생성을 위한 클래스 초기화
         
         Args:
             prefix (Optional[str]): 프롬프트 앞에 추가할 텍스트
-            suffix (Optional[str]): 프롬프트 뒤에 추가할 텍스트
             user_input (Optional[str]): 사용자 입력
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 '대상 파일'의 어휘/문맥/형식에 적절하게 html코드를 수정 후 출력해주세요."
+        self.prefix = prefix or "'주어진 파일'의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 '대상 파일'의 어휘/문맥/형식에 적절하게 html코드를 수정 후 출력해주세요. '대상 파일'의 내용 중 생략되는 부분 없이 수정 수 출력해주세요."
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
