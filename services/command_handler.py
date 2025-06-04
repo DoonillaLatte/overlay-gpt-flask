@@ -63,6 +63,8 @@ class CommandHandler:
                 'target_program': message.get('target_program')
             }
             
+            logger.info(f"요청 내용: {content}")
+            
             # 필수 필드 검증
             if not content['prompt']:
                 raise ValueError("prompt는 필수 입력값입니다.")
@@ -81,6 +83,8 @@ class CommandHandler:
                     5: "convert",           #주어진 파일을 근거로 대상 파일의 내용 변환
                     6: "freestyle_text"     #html 코드가 아닌 텍스트 형식의 리턴
                 }.get(content['request_type'], "freestyle")
+            
+            logger.info(f"선택된 전략: {strategy_name}")
             
             strategy = self.prompt_factory.get_strategy(strategy_name)
             
@@ -101,10 +105,13 @@ class CommandHandler:
             # 예시를 content에 추가
             content['examples'] = examples
             
+            logger.info(f"전략 실행 전 content: {content}")
             response = strategy.generate_prompt(content)
+            logger.info(f"전략 실행 결과: {response}")
             
             # HTML 엔티티 디코딩
             response = html.unescape(response)
+            logger.info(f"HTML 디코딩 후: {response}")
             
             # 제목 생성
             title = None
