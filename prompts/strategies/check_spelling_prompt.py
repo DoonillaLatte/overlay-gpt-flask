@@ -54,6 +54,7 @@ class CheckSpellingPrompt():
                 if examples:
                     examples_text = "\n\n".join([f"예시 {i+1}:\n{example}" for i, example in enumerate(examples)])
                     prompt_template = ChatPromptTemplate.from_messages([
+                        ("system", """input의 요구에 맞추어 답변을 생성하세요."""),
                         ("system", self.prefix),
                         ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 문법과 형식의 예시입니다. 
@@ -71,8 +72,9 @@ class CheckSpellingPrompt():
                             {current_program.get('context', '')}
                             """)
                     ])
-                else:
+                else:   
                     prompt_template = ChatPromptTemplate.from_messages([
+                        ("system", """input의 요구에 맞추어 답변을 생성하세요."""),
                         ("system", self.prefix),
                         ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                         ("human", "{input}"),
@@ -88,6 +90,7 @@ class CheckSpellingPrompt():
                     ])
             else:
                 prompt_template = ChatPromptTemplate.from_messages([
+                    ("system", """input의 요구에 맞추어 답변을 생성하세요."""),
                     ("system", self.prefix),
                     ("system", """코드 생성 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
                     ("human", "{input}"),
