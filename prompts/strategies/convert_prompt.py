@@ -24,7 +24,7 @@ class ConvertPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "'주어진 파일'의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 '대상 파일'의 어휘/문맥/형식에 적절하게 html코드를 수정 후 출력해주세요. '대상 파일'의 내용 중 생략되는 부분 없이 수정 수 출력해주세요."
+        self.prefix = prefix or "'주어진 파일'의 형식의 html코드를 분석하여, 프롬프트 요청에 따라 '대상 파일'의 어휘/문맥/형식에 적절하게 html코드를 수정 후 출력해주세요. '대상 파일'의 내용 중 생략되는 부분 없이 수정 수 출력해주세요. 출력되는 내용은 반드시 html마크업 방식이어야 합니다."
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:

@@ -24,7 +24,7 @@ class CheckSpellingPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, html의 내용 중 올바르지 않은 맞춤법을 찾아 수정해주세요. 생략되는 내용이 생겨서는 안됩니다."
+        self.prefix = prefix or "주어진 파일의 형식의 html코드를 분석하여, html의 내용 중 올바르지 않은 맞춤법을 찾아 수정해주세요. 생략되는 내용이 생겨서는 안됩니다. 출력되는 내용은 반드시 html마크업 방식이어야 합니다."
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
