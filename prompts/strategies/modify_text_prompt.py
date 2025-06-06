@@ -25,9 +25,9 @@ class ModifyTextPrompt():
         
         self.user_input = user_input
         self.prefix = prefix or """
-        주어진 파일의 형식의 코드 내용을 분석하여, 프롬프트 요청에 따라 적절하게 내용을 수정 후 html 코드로 출력해주세요. 
+        주어진 파일의 형식의 마크업 코드 내용을 분석하여, 프롬프트 요청에 따라 적절하게 마크업 코드를 수정 후 출력해주세요. 
         기존의 내용에서 요청 데이터를 기반으로 수정이 되어야 합니다. 
-        출력되는 내용은 반드시 html 마크업 방식이어야 합니다.
+        출력되는 내용은 반드시 명시된 마크업 방식이어야 합니다.
         """
         self.logger = logging.getLogger(__name__)
 
@@ -52,6 +52,41 @@ class ModifyTextPrompt():
             # MemoryManager를 통해 메모리 가져오기
             memory = MemoryManager.get_memory()
             
+            # 파일 타입에 따른 마크업 문법 설정
+            file_type = current_program.get('fileType', '').lower() if current_program else ''
+            markup_type = "html"  # 기본값
+            markup_instruction = ""
+            
+            if file_type in ['word', 'excel']:
+                markup_type = "html"
+                markup_instruction = """
+                HTML 마크업 규칙:
+                1. 모든 태그는 올바르게 열리고 닫혀야 합니다.
+                2. Word/Excel 문서의 경우 <table>, <tr>, <td> 태그를 사용하여 표를 구성합니다.
+                3. 텍스트 서식은 <p>, <span>, <div> 등의 태그를 사용합니다.
+                4. 스타일은 style 속성을 통해 지정합니다.
+                """
+            elif file_type == 'hwp':
+                markup_type = "xml"
+                markup_instruction = """
+                HWP XML 마크업 규칙:
+                1. <HWPML> 루트 태그로 시작합니다.
+                2. <SECTION> 태그로 문서 섹션을 구분합니다.
+                3. <PARA> 태그로 문단을 구분합니다.
+                4. <TEXT> 태그로 텍스트 내용을 포함합니다.
+                5. 모든 태그는 올바른 네임스페이스를 사용해야 합니다.
+                """
+            elif file_type == 'ppt':
+                markup_type = "xml"
+                markup_instruction = """
+                PPT XML 마크업 규칙:
+                1. <p:presentation> 루트 태그로 시작합니다.
+                2. <p:sld> 태그로 슬라이드를 구분합니다.
+                3. <p:sp> 태그로 도형과 텍스트 상자를 정의합니다.
+                4. <a:p> 태그로 문단을 구분합니다.
+                5. <a:r> 태그로 텍스트 실행을 정의합니다.
+                """
+            
             # 프롬프트 템플릿 생성
             if current_program:
                 # 예시가 있는 경우
@@ -60,9 +95,10 @@ class ModifyTextPrompt():
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", """input의 요구에 맞추어 답변을 생성하세요."""),
                         ("system", self.prefix),
-                        ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
+                        ("system", f"""코드 변환 전용 AI입니다. 주석이나 설명 없이 {markup_type} 마크업 코드만을 출력해주세요."""),
+                        ("system", markup_instruction),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 문법과 형식의 예시입니다. 
-                            이 예시들을 문법만을 참고하여 요청을 문법에 맞추어 응답해주세요:
+                            이 예시들의 {markup_type} 마크업 문법만을 참고하여 요청을 문법에 맞추어 응답해주세요:
                             
                             {examples_text}"""),
                         ("human", "{input}"),
@@ -74,13 +110,14 @@ class ModifyTextPrompt():
                             - 파일 형식: {current_program.get('fileType', '')}
                             - 파일 내용:
                             {current_program.get('context', '')}
-                            """),
+                            """)
                     ])
-                else:
+                else:   
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", """input의 요구에 맞추어 답변을 생성하세요."""),
                         ("system", self.prefix),
-                        ("system", """코드 변환 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
+                        ("system", f"""코드 변환 전용 AI입니다. 주석이나 설명 없이 {markup_type} 마크업 코드만을 출력해주세요."""),
+                        ("system", markup_instruction),
                         ("human", "{input}"),
                         ("ai", "{chat_history}"),
                         ("human", f"""사용자 요청: {prompt}
