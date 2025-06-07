@@ -27,6 +27,7 @@ class CheckSpellingPrompt():
         self.prefix = prefix or """
         주어진 파일의 형식의 마크업 코드를 분석하여, 코드의 내용 중 올바르지 않은 맞춤법을 찾아 수정해주세요. 
         생략되는 내용이 생겨서는 안됩니다. 출력되는 내용은 반드시 명시된 마크업 방식이어야 합니다.
+        제목은 생략하고 내용만 출력해주세요.
         """
         self.logger = logging.getLogger(__name__)
 
