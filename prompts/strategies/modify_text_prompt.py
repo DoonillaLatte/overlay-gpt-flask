@@ -50,6 +50,10 @@ class ModifyTextPrompt():
             current_program = request_data.get('current_program')
             examples = request_data.get('examples', [])
             
+            # context 내용에서 중괄호 이스케이프 처리
+            if current_program and 'context' in current_program:
+                current_program['context'] = current_program['context'].replace('{{', '[[').replace('}}', ']]').replace('{', '[').replace('}', ']')
+            
             # MemoryManager를 통해 메모리 가져오기
             memory = MemoryManager.get_memory()
             

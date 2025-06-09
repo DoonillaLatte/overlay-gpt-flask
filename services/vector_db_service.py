@@ -39,6 +39,11 @@ class VectorDBService:
             VectorDatabase: 해당 파일 타입의 VectorDB
         """
         normalized_type = file_type.lower()
+        
+        # text 타입은 지원하지 않음을 명시적으로 처리
+        if normalized_type == 'text':
+            raise ValueError(f"Text 파일 타입은 벡터 DB를 지원하지 않습니다: {file_type}")
+            
         if normalized_type not in self._vector_dbs:
             raise ValueError(f"지원하지 않는 파일 타입입니다: {file_type}")
         return self._vector_dbs[normalized_type]
@@ -55,6 +60,11 @@ class VectorDBService:
             volume_id (int): 볼륨 ID
         """
         try:
+            # text 타입은 벡터 DB에 저장하지 않음
+            if file_type.lower() == 'text':
+                logger.info(f"Text 타입은 벡터 DB에 저장하지 않습니다 - FileID: {file_id}, FileType: {file_type}")
+                return
+                
             vector_db = self._get_db_by_type(file_type)
             
             # 동일한 file_id가 있는지 확인하고 있다면 삭제
@@ -100,6 +110,11 @@ class VectorDBService:
             Dict[str, Any]: 프로그램 정보 (metadata)
         """
         try:
+            # text 타입은 벡터 DB에서 조회하지 않음
+            if file_type.lower() == 'text':
+                logger.info(f"Text 타입은 벡터 DB에서 조회하지 않습니다 - FileID: {file_id}, FileType: {file_type}")
+                return {}
+                
             vector_db = self._get_db_by_type(file_type)
             vector_data = vector_db.get_vector(file_id)
             return vector_data.get("metadata", {})
@@ -116,6 +131,11 @@ class VectorDBService:
             file_type (str): 파일 타입 (excel, word, hwp, powerpoint)
         """
         try:
+            # text 타입은 벡터 DB에서 삭제하지 않음
+            if file_type.lower() == 'text':
+                logger.info(f"Text 타입은 벡터 DB에서 삭제하지 않습니다 - FileID: {file_id}, FileType: {file_type}")
+                return
+                
             vector_db = self._get_db_by_type(file_type)
             vector_db.delete_vector(file_id)
             logger.info(f"파일 정보가 벡터 DB에서 삭제되었습니다. Type: {file_type}, ID: {file_id}")
@@ -137,6 +157,11 @@ class VectorDBService:
         """
         try:
             logger.debug(f"유사 파일 검색 시작. 쿼리: {query}, 파일 타입: {file_type}, k: {k}")
+            
+            # text 타입은 유사도 검색을 하지 않음
+            if file_type and file_type.lower() == 'text':
+                logger.info(f"Text 타입은 유사도 검색을 하지 않습니다 - FileType: {file_type}")
+                return []
             
             if file_type:
                 # 특정 파일 타입에서만 검색

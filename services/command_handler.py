@@ -79,8 +79,11 @@ class CommandHandler:
             
             current_program = content.get('current_program') or {}
             
-            if current_program and current_program.get('fileType') == 'text':
-                strategy_name = "convert_for_text"
+            if current_program and current_program.get('fileType') == 'Text':
+                if content.get('target_program'):
+                    strategy_name = "convert_for_text"
+                else:
+                    strategy_name = "freestyle_text"
             else:
                 # target_program이 있는 경우 convert_prompt 사용
                 if content.get('target_program'):
@@ -99,38 +102,46 @@ class CommandHandler:
             
             strategy = self.prompt_factory.get_strategy(strategy_name)
             
-            # current_program이 있을 경우 vector DB에 저장
+                        # current_program이 있을 경우 vector DB에 저장 (text 타입 제외)
             if current_program and current_program.get('fileId') and current_program.get('context'):
-                try:
-                    self.vector_db_service.store_program_info(
-                        file_id=current_program.get('fileId'),
-                        file_type=current_program.get('fileType'),
-                        context=current_program.get('context'),
-                        volume_id=current_program.get('volumeId')
-                    )
-                    logger.info(f"현재 프로그램 정보를 vector DB에 저장했습니다 - FileID: {current_program.get('fileId')}, FileType: {current_program.get('fileType')}")
-                except Exception as e:
-                    logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
-            
-            #target_program이 있는 경우 vector DB에 저장
+                current_file_type = current_program.get('fileType', '').lower()
+                if current_file_type != 'Text':  # text 타입은 vector DB 저장 안함
+                    try:
+                        self.vector_db_service.store_program_info(
+                            file_id=current_program.get('fileId'),
+                            file_type=current_program.get('fileType'),
+                            context=current_program.get('context'),
+                            volume_id=current_program.get('volumeId')
+                        )
+                        logger.info(f"현재 프로그램 정보를 vector DB에 저장했습니다 - FileID: {current_program.get('fileId')}, FileType: {current_program.get('fileType')}")
+                    except Exception as e:
+                        logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
+                else:
+                    logger.info(f"Text 타입은 vector DB에 저장하지 않습니다 - FileType: {current_program.get('fileType')}")
+
+            #target_program이 있는 경우 vector DB에 저장 (text 타입 제외)
             if content.get('target_program'):
-                try:
-                    self.vector_db_service.store_program_info(
-                        file_id=content.get('target_program').get('fileId'),
-                        file_type=content.get('target_program').get('fileType'),
-                        context=content.get('target_program').get('context'),
-                        volume_id=content.get('target_program').get('volumeId')
-                    )
-                    logger.info(f"대상 프로그램 정보를 vector DB에 저장했습니다 - FileID: {content.get('target_program').get('fileId')}, FileType: {content.get('target_program').get('fileType')}")
-                except Exception as e:
-                    logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
+                target_file_type = content.get('target_program').get('fileType', '').lower()
+                if target_file_type != 'Text':  # Text 타입은 vector DB 저장 안함
+                    try:
+                        self.vector_db_service.store_program_info(
+                            file_id=content.get('target_program').get('fileId'),
+                            file_type=content.get('target_program').get('fileType'),
+                            context=content.get('target_program').get('context'),
+                            volume_id=content.get('target_program').get('volumeId')
+                        )
+                        logger.info(f"대상 프로그램 정보를 vector DB에 저장했습니다 - FileID: {content.get('target_program').get('fileId')}, FileType: {content.get('target_program').get('fileType')}")
+                    except Exception as e:
+                        logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
+                else:
+                    logger.info(f"Target Text 타입은 vector DB에 저장하지 않습니다 - FileType: {content.get('target_program').get('fileType')}")
             
             # 파일 형식에 따른 예시 검색
             examples = []
             if current_program:
                 file_type = current_program.get('fileType')
                 # text 타입은 예시 검색하지 않음
-                if file_type and file_type != 'text':
+                if file_type and file_type != 'Text':
                     # 파일 형식에 맞는 예시 검색
                     similar_examples = self.vector_db_service.search_similar_programs(
                         query=f"fileType:{file_type}",
@@ -226,43 +237,35 @@ class CommandHandler:
             multi_volume_id = content['current_program']['volumeId']
             request_file_type = content['file_type']
             
-            # text 타입 처리
-            if multi_file_type == 'text':
-                logger.info(f"텍스트 타입 워크플로우 검색 - 요청 파일 타입: {request_file_type}")
-                
-                # text는 DB에 저장하지 않음
-                # 텍스트 내용으로 요청 파일 타입 DB에서 유사한 프로그램 검색
-                similar_programs = self.vector_db_service.search_similar_programs(
-                    query=multi_file_context[:500],  # 텍스트 앞부분을 쿼리로 사용
-                    file_type=request_file_type,
-                    k=5
-                )
-                
-                # 유사한 프로그램의 ID 리스트 추출
-                similar_program_ids = [[program['fileId'], program['volumeId']] for program in similar_programs]
-                
-                logger.info(f"텍스트 기반 유사 문서 {len(similar_program_ids)}개 발견")
-                
-            else:
-                # 일반 파일 처리
-                # 벡터 데이터베이스에 프로그램 정보 저장
-                self.vector_db_service.store_program_info(
-                    file_id=multi_file_id,
-                    file_type=multi_file_type,
-                    context=multi_file_context,
-                    volume_id=multi_volume_id
-                )
-                
-                # 유사한 프로그램 검색
-                similar_programs = self.vector_db_service.search_similar_programs(
-                    query=multi_file_context,
-                    file_type=request_file_type,
-                    k=5
-                )
-                
-                # 유사한 프로그램의 ID 리스트 추출
-                similar_program_ids = [[program['fileId'], program['volumeId']] for program in similar_programs]
+            # text 타입은 유사도 검색을 하지 않음
+            if multi_file_type.lower() == 'text' or request_file_type.lower() == 'text':
+                logger.info(f"Text 타입은 유사도 검색을 하지 않습니다 - Current: {multi_file_type}, Request: {request_file_type}")
+                return {
+                    'command': 'response_workflows',
+                    'chat_id': content['chat_id'],
+                    'similar_program_ids': [],  # 빈 리스트 반환
+                    'status': 'success'
+                }
+
+            # 일반 파일 처리
+            # 벡터 데이터베이스에 프로그램 정보 저장
+            self.vector_db_service.store_program_info(
+                file_id=multi_file_id,
+                file_type=multi_file_type,
+                context=multi_file_context,
+                volume_id=multi_volume_id
+            )
             
+            # 유사한 프로그램 검색
+            similar_programs = self.vector_db_service.search_similar_programs(
+                query=multi_file_context,
+                file_type=request_file_type,
+                k=5
+            )
+            
+            # 유사한 프로그램의 ID 리스트 추출
+            similar_program_ids = [[program['fileId'], program['volumeId']] for program in similar_programs]
+        
             return {
                 'command': 'response_workflows',
                 'chat_id': content['chat_id'],
