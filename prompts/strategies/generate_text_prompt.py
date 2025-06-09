@@ -91,7 +91,6 @@ class GenerateTextPrompt():
                 - 밑줄: text-decoration: underline
                 - 취소선: <s>태그
                 - 텍스트 색상: color: #{{rgbColor}}
-                - 불릿포인트: <br><br> 태그로 구분된 문장들을 <br><br>태그로 그대로 출력
                 ```
 
                 ### 배경 스타일
@@ -139,6 +138,7 @@ class GenerateTextPrompt():
                 ### 도형 타입별 태그
                 ```html
                 - 자동 도형: <div>
+                - 불릿포인트: <br><br>
                 - 그림: <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' />
                 - 텍스트 상자: <div>
                 - 선: <div>
@@ -228,12 +228,16 @@ class GenerateTextPrompt():
                     </div>
                 </div>
                 ```
+                
+                ### 불릿포인트 처리
+                ```html
+                <br><br>
+                ```
 
                 ### 저장 위치
                 - 변환된 HTML은 `test.html` 파일로 저장됩니다.
                 - 각 슬라이드의 모든 요소와 스타일이 보존됩니다.
-                - 슬라이드 번호는 `Slide1`, `Slide2` 등의 클래스로 구분됩니다. 
-
+                - 슬라이드 번호는 `Slide1`, `Slide2` 등의 클래스로 구분됩니다.
                 """
             
             # 프롬프트 템플릿 생성

@@ -91,7 +91,6 @@ class ModifyTextPrompt():
                 - 밑줄: text-decoration: underline
                 - 취소선: <s>태그
                 - 텍스트 색상: color: #{{rgbColor}}
-                - 불릿포인트: <br><br> 태그로 구분된 문장들을 <br><br>태그로 그대로 출력
                 ```
 
                 ### 배경 스타일
@@ -139,6 +138,7 @@ class ModifyTextPrompt():
                 ### 도형 타입별 태그
                 ```html
                 - 자동 도형: <div>
+                - 불릿포인트: <br><br>
                 - 그림: <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' />
                 - 텍스트 상자: <div>
                 - 선: <div>
@@ -227,6 +227,11 @@ class ModifyTextPrompt():
                         <span style='font-size: 16pt;'>내용</span>
                     </div>
                 </div>
+                ```
+                
+                ### 불릿포인트 처리
+                ```html
+                <br><br>
                 ```
 
                 ### 저장 위치
