@@ -90,6 +90,7 @@ class CheckSpellingPrompt():
                 - 밑줄: text-decoration: underline
                 - 취소선: <s>태그
                 - 텍스트 색상: color: #{{rgbColor}}
+                - 불릿포인트: <br><br> 태그로 구분된 문장들을 <br><br>태그로 그대로 출력
                 ```
 
                 ### 배경 스타일
