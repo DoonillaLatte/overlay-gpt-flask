@@ -216,9 +216,9 @@ class GenerateTextPrompt():
                         <span style='font-size: 24pt; font-weight: bold;'>제목</span>
                     </div>
                     
-                    <!-- 이미지 -->
-                    <div style='position: absolute; left: 150px; top: 150px; width: 300px; height: 200px;'>
-                        <img src='data:image/png;base64,...' alt='Image' />
+                    <!-- 이미지 (절대 경로 사용) -->
+                    <div style='position: absolute; left: 150px; top: 150px; width: 200px; height: 200px;'>
+                        <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' style='width: 100%; height: 100%; object-fit: contain;' />
                     </div>
                     
                     <!-- 도형 -->
