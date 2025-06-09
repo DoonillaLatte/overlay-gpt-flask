@@ -112,6 +112,19 @@ class CommandHandler:
                 except Exception as e:
                     logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
             
+            #target_program이 있는 경우 vector DB에 저장
+            if content.get('target_program'):
+                try:
+                    self.vector_db_service.store_program_info(
+                        file_id=content.get('target_program').get('fileId'),
+                        file_type=content.get('target_program').get('fileType'),
+                        context=content.get('target_program').get('context'),
+                        volume_id=content.get('target_program').get('volumeId')
+                    )
+                    logger.info(f"대상 프로그램 정보를 vector DB에 저장했습니다 - FileID: {content.get('target_program').get('fileId')}, FileType: {content.get('target_program').get('fileType')}")
+                except Exception as e:
+                    logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
+            
             # 파일 형식에 따른 예시 검색
             examples = []
             if current_program:

@@ -25,10 +25,10 @@ class ConvertPrompt():
         
         self.user_input = user_input
         self.prefix = prefix or """
-        주어진 파일의 형식의 마크업 코드 내용을 분석하여, 프롬프트 요청에 따라 '대상 파일'의 어휘/문맥/형식에 적절하게 마크업 코드를 수정 후 출력해주세요. 
-        '대상 파일'의 내용 중 생략되는 부분 없이 수정 후 출력해주세요. 
+        주어진 파일의 형식의 마크업 코드 내용을 분석하여, 대상 파일의 마크업 코드를 수정 혹은 추가 후 출력해주세요. 
+        '대상 파일'의 내용 중 손상되는 부분 없이 수정 혹은 추가 후 출력해주세요. 
         출력되는 내용은 반드시 명시된 마크업 방식이어야 합니다.
-        제목은 생략하고 내용만 출력해주세요.
+        제목은 생략하고 수정된 대상 파일의 내용만 출력해주세요.
         """
         self.logger = logging.getLogger(__name__)
 
@@ -50,6 +50,12 @@ class ConvertPrompt():
             current_program = request_data.get('current_program')
             target_program = request_data.get('target_program')
             examples = request_data.get('examples', [])
+            
+            # context 내용에서 중괄호 이스케이프 처리
+            if current_program and 'context' in current_program:
+                current_program['context'] = current_program['context'].replace('{{', '[[').replace('}}', ']]')
+            if target_program and 'context' in target_program:
+                target_program['context'] = target_program['context'].replace('{{', '[[').replace('}}', ']]')
             
             # MemoryManager를 통해 메모리 가져오기
             memory = MemoryManager.get_memory()
@@ -85,13 +91,13 @@ class ConvertPrompt():
                 
                 ### 기본 텍스트 스타일
                 ```css
-                - 글꼴 크기: font-size: {{size}}pt
-                - 글꼴 이름: font-family: {{fontName}}
+                - 글꼴 크기: font-size: [size]pt
+                - 글꼴 이름: font-family: [fontName]
                 - 글자 굵기: font-weight: Bold/Normal
                 - 이탤릭: font-style: italic
                 - 밑줄: text-decoration: underline
                 - 취소선: <s>태그
-                - 텍스트 색상: color: #{{rgbColor}}
+                - 텍스트 색상: color: #[rgbColor]
                 ```
 
                 ### 배경 스타일
@@ -121,17 +127,17 @@ class ConvertPrompt():
                 ### 기본 도형 속성
                 ```css
                 - 위치: position: absolute
-                - 좌표: left: {{x}}px, top: {{y}}px
-                - 크기: width: {{width}}px, height: {{height}}px
-                - 회전: transform: rotate({{angle}}deg)
+                - 좌표: left: [x]px, top: [y]px
+                - 크기: width: [width]px, height: [height]px
+                - 회전: transform: rotate([angle]deg)
                 ```
 
                 ### 테두리와 효과
                 ```css
-                - 테두리: border: {{weight}}px {{style}} {{color}}
-                - 그림자: box-shadow: {{x}}px {{y}}px {{blur}}px rgba(r,g,b,alpha)
-                - 모서리 둥글기: border-radius: {{radius}}px
-                - Z-인덱스: z-index: {{position}}
+                - 테두리: border: [weight]px [style] [color]
+                - 그림자: box-shadow: [x]px [y]px [blur]px rgba(r,g,b,alpha)
+                - 모서리 둥글기: border-radius: [radius]px
+                - Z-인덱스: z-index: [position]
                 ```
 
                 ## 4. HTML 태그 변환
@@ -140,7 +146,7 @@ class ConvertPrompt():
                 ```html
                 - 자동 도형: <div>
                 - 불릿포인트: <br><br>
-                - 그림: <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' />
+                - 그림: <img src='[절대경로]/images/[GUID].png' alt='Image' />
                 - 텍스트 상자: <div>
                 - 선: <div>
                 - 차트: <div>
@@ -151,8 +157,8 @@ class ConvertPrompt():
                 ### 이미지 처리
                 ```css
                 - 저장 형식: PNG
-                - 저장 위치: {{프로그램경로}}/images/
-                - 파일명: {{GUID}}.png
+                - 저장 위치: [프로그램경로]/images/
+                - 파일명: [GUID].png
                 - 참조 방식: 절대 경로 사용
                 ```
 
@@ -190,7 +196,7 @@ class ConvertPrompt():
 
                 <!-- 이미지 -->
                 <div style='position: absolute; left: 150px; top: 150px; width: 300px; height: 200px;'>
-                    <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' />
+                    <img src='[절대경로]/images/[GUID].png' alt='Image' />
                 </div>
 
                 <!-- 도형 -->
@@ -220,7 +226,7 @@ class ConvertPrompt():
                     
                     <!-- 이미지 (절대 경로 사용) -->
                     <div style='position: absolute; left: 150px; top: 150px; width: 200px; height: 200px;'>
-                        <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' style='width: 100%; height: 100%; object-fit: contain;' />
+                        <img src='[절대경로]/images/[GUID].png' alt='Image' style='width: 100%; height: 100%; object-fit: contain;' />
                     </div>
                     
                     <!-- 도형 -->
@@ -248,7 +254,7 @@ class ConvertPrompt():
                     examples_text = "\n\n".join([f"예시 {i+1}:\n{example}" for i, example in enumerate(examples)])
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
-                        ("system", f"""코드 변환 전용 AI입니다. 주석이나 설명 없이 {markup_type} 마크업 코드만을 출력해주세요."""),
+                        ("system", f"""코드 변환 전용 AI입니다. 주석이나 설명 없이 수정된 대상 파일의 {markup_type} 코드만을 출력해주세요."""),
                         ("system", markup_instruction),
                         ("system", f"""다음은 {current_program.get('fileType', '')} 파일 형식의 예시입니다. 
                             이 예시들을 {markup_type} 마크업 문법에 맞추어 변환하여 응답해주세요:
@@ -273,7 +279,7 @@ class ConvertPrompt():
                 else:
                     prompt_template = ChatPromptTemplate.from_messages([
                         ("system", self.prefix),
-                        ("system", f"""코드 변환 전용 AI입니다. 주석이나 설명 없이 {markup_type} 마크업 코드만을 출력해주세요."""),
+                        ("system", f"""코드 변환 전용 AI입니다. 주석이나 설명 없이 수정된 대상 파일의 {markup_type} 코드만을 출력해주세요."""),
                         ("system", markup_instruction),
                         ("human", "{input}"),
                         ("ai", "{chat_history}"),
@@ -294,13 +300,13 @@ class ConvertPrompt():
             else:
                 prompt_template = ChatPromptTemplate.from_messages([
                     ("system", self.prefix),
-                    ("system", """코드 생성 전용 AI입니다. 주석이나 설명 없이 코드만을 출력해주세요."""),
+                    ("system", """코드 생성 전용 AI입니다. 주석이나 설명 없이 수정된 대상 파일의 {markup_type} 코드만을 출력해주세요."""),
                     ("human", "{input}"),
                     ("ai", "{chat_history}"),
                     ("human", f"사용자 요청: {prompt}")
                 ])
             
-            llm = ChatOpenAI(model="gpt-4.1",
+            llm = ChatOpenAI(model="gpt-4o",
                             api_key=api_key,
                             temperature=0.5
                             )
