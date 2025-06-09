@@ -84,13 +84,13 @@ class GenerateTextPrompt():
                 
                 ### 기본 텍스트 스타일
                 ```css
-                - 글꼴 크기: font-size: {size}pt
-                - 글꼴 이름: font-family: {fontName}
+                - 글꼴 크기: font-size: {{size}}pt
+                - 글꼴 이름: font-family: {{fontName}}
                 - 글자 굵기: font-weight: Bold/Normal
                 - 이탤릭: font-style: italic
                 - 밑줄: text-decoration: underline
                 - 취소선: <s>태그
-                - 텍스트 색상: color: #{rgbColor}
+                - 텍스트 색상: color: #{{rgbColor}}
                 ```
 
                 ### 배경 스타일
@@ -120,17 +120,17 @@ class GenerateTextPrompt():
                 ### 기본 도형 속성
                 ```css
                 - 위치: position: absolute
-                - 좌표: left: {x}px, top: {y}px
-                - 크기: width: {width}px, height: {height}px
-                - 회전: transform: rotate({angle}deg)
+                - 좌표: left: {{x}}px, top: {{y}}px
+                - 크기: width: {{width}}px, height: {{height}}px
+                - 회전: transform: rotate({{angle}}deg)
                 ```
 
                 ### 테두리와 효과
                 ```css
-                - 테두리: border: {weight}px {style} {color}
-                - 그림자: box-shadow: {x}px {y}px {blur}px rgba(r,g,b,alpha)
-                - 모서리 둥글기: border-radius: {radius}px
-                - Z-인덱스: z-index: {position}
+                - 테두리: border: {{weight}}px {{style}} {{color}}
+                - 그림자: box-shadow: {{x}}px {{y}}px {{blur}}px rgba(r,g,b,alpha)
+                - 모서리 둥글기: border-radius: {{radius}}px
+                - Z-인덱스: z-index: {{position}}
                 ```
 
                 ## 4. HTML 태그 변환
@@ -138,7 +138,7 @@ class GenerateTextPrompt():
                 ### 도형 타입별 태그
                 ```html
                 - 자동 도형: <div>
-                - 그림: <img src='{절대경로}/images/{GUID}.png' alt='Image' />
+                - 그림: <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' />
                 - 텍스트 상자: <div>
                 - 선: <div>
                 - 차트: <div>
@@ -149,8 +149,8 @@ class GenerateTextPrompt():
                 ### 이미지 처리
                 ```css
                 - 저장 형식: PNG
-                - 저장 위치: {프로그램경로}/images/
-                - 파일명: {GUID}.png
+                - 저장 위치: {{프로그램경로}}/images/
+                - 파일명: {{GUID}}.png
                 - 참조 방식: 절대 경로 사용
                 ```
 
@@ -188,7 +188,7 @@ class GenerateTextPrompt():
 
                 <!-- 이미지 -->
                 <div style='position: absolute; left: 150px; top: 150px; width: 300px; height: 200px;'>
-                    <img src='{절대경로}/images/{GUID}.png' alt='Image' />
+                    <img src='{{절대경로}}/images/{{GUID}}.png' alt='Image' />
                 </div>
 
                 <!-- 도형 -->
