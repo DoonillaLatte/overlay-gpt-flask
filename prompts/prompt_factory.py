@@ -6,6 +6,7 @@ from .strategies.freestyle_prompt import FreestylePrompt
 from .strategies.generate_text_prompt import GenerateTextPrompt
 from .strategies.check_spelling_prompt import CheckSpellingPrompt
 from .strategies.convert_prompt import ConvertPrompt
+from .strategies.convert_for_text_prompt import ConvertForTextPrompt
 
 class PromptFactory:
     def __init__(self):
@@ -19,6 +20,7 @@ class PromptFactory:
         self.register_strategy("modify_text", ModifyTextPrompt )
         self.register_strategy("check_spelling", CheckSpellingPrompt)
         self.register_strategy("convert", ConvertPrompt)
+        self.register_strategy("convert_for_text", ConvertForTextPrompt)
         
     def register_strategy(self, name: str, strategy: Type[PromptStrategy]):
         self._strategies[name] = strategy

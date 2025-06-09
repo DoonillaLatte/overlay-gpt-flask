@@ -77,29 +77,47 @@ class CommandHandler:
             if not content['request_type']:
                 raise ValueError("request_type은 필수 입력값입니다.")
             
-            # target_program이 있는 경우 convert_prompt 사용
-            if content.get('target_program'):
-                strategy_name = "convert"
+            current_program = content.get('current_program') or {}
+            
+            if current_program and current_program.get('fileType') == 'text':
+                strategy_name = "convert_for_text"
             else:
-                strategy_name = {
-                    1: "freestyle",         #마크업 코드로 자유 작성
-                    2: "generate_text",     #파일의 내용 추가
-                    3: "modify_text",       #파일의 내용 수정
-                    4: "check_spelling",    #파일의 내용 맞춤법 검사
-                    5: "convert",           #주어진 파일을 근거로 대상 파일의 내용 변환
-                    6: "freestyle_text"     #마크업 코드가 아닌 텍스트 형식의 리턴
-                }.get(content['request_type'], "freestyle")
+                # target_program이 있는 경우 convert_prompt 사용
+                if content.get('target_program'):
+                    strategy_name = "convert"
+                else:
+                    strategy_name = {
+                        1: "freestyle",         #마크업 코드로 자유 작성
+                        2: "generate_text",     #파일의 내용 추가
+                        3: "modify_text",       #파일의 내용 수정
+                        4: "check_spelling",    #파일의 내용 맞춤법 검사
+                        5: "convert",           #주어진 파일을 근거로 대상 파일의 내용 변환
+                        6: "freestyle_text"     #마크업 코드가 아닌 텍스트 형식의 리턴
+                    }.get(content['request_type'], "freestyle")
             
             logger.info(f"선택된 전략: {strategy_name}")
             
             strategy = self.prompt_factory.get_strategy(strategy_name)
             
+            # current_program이 있을 경우 vector DB에 저장
+            if current_program and current_program.get('fileId') and current_program.get('context'):
+                try:
+                    self.vector_db_service.store_program_info(
+                        file_id=current_program.get('fileId'),
+                        file_type=current_program.get('fileType'),
+                        context=current_program.get('context'),
+                        volume_id=current_program.get('volumeId')
+                    )
+                    logger.info(f"현재 프로그램 정보를 vector DB에 저장했습니다 - FileID: {current_program.get('fileId')}, FileType: {current_program.get('fileType')}")
+                except Exception as e:
+                    logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
+            
             # 파일 형식에 따른 예시 검색
             examples = []
-            current_program = content.get('current_program') or {}
             if current_program:
                 file_type = current_program.get('fileType')
-                if file_type:
+                # text 타입은 예시 검색하지 않음
+                if file_type and file_type != 'text':
                     # 파일 형식에 맞는 예시 검색
                     similar_examples = self.vector_db_service.search_similar_programs(
                         query=f"fileType:{file_type}",
@@ -142,11 +160,17 @@ class CommandHandler:
             
             # 제목 생성
             title = None
-            file_type = 'word'  # 기본값으로 word 사용
+            title_file_type = 'word'  # 기본값으로 word 사용
             if current_program and current_program.get('fileType'):
-                file_type = current_program['fileType']
+                current_file_type = current_program['fileType']
+                # text 타입이면 target_program의 fileType 사용, 없으면 word
+                if current_file_type == 'text':
+                    target_program = content.get('target_program', {})
+                    title_file_type = target_program.get('fileType', 'word')
+                else:
+                    title_file_type = current_file_type
                 
-            vector_db = self.vector_db_service._get_db_by_type(file_type)
+            vector_db = self.vector_db_service._get_db_by_type(title_file_type)
             title = vector_db._generate_title(content['prompt'])
             
             return {
@@ -189,23 +213,42 @@ class CommandHandler:
             multi_volume_id = content['current_program']['volumeId']
             request_file_type = content['file_type']
             
-            # 벡터 데이터베이스에 프로그램 정보 저장
-            self.vector_db_service.store_program_info(
-                file_id=multi_file_id,
-                file_type=multi_file_type,
-                context=multi_file_context,
-                volume_id=multi_volume_id
-            )
-            
-            # 유사한 프로그램 검색
-            similar_programs = self.vector_db_service.search_similar_programs(
-                query=multi_file_context,
-                file_type=request_file_type,
-                k=5
-            )
-            
-            # 유사한 프로그램의 ID 리스트 추출
-            similar_program_ids = [[program['fileId'], program['volumeId']] for program in similar_programs]
+            # text 타입 처리
+            if multi_file_type == 'text':
+                logger.info(f"텍스트 타입 워크플로우 검색 - 요청 파일 타입: {request_file_type}")
+                
+                # text는 DB에 저장하지 않음
+                # 텍스트 내용으로 요청 파일 타입 DB에서 유사한 프로그램 검색
+                similar_programs = self.vector_db_service.search_similar_programs(
+                    query=multi_file_context[:500],  # 텍스트 앞부분을 쿼리로 사용
+                    file_type=request_file_type,
+                    k=5
+                )
+                
+                # 유사한 프로그램의 ID 리스트 추출
+                similar_program_ids = [[program['fileId'], program['volumeId']] for program in similar_programs]
+                
+                logger.info(f"텍스트 기반 유사 문서 {len(similar_program_ids)}개 발견")
+                
+            else:
+                # 일반 파일 처리
+                # 벡터 데이터베이스에 프로그램 정보 저장
+                self.vector_db_service.store_program_info(
+                    file_id=multi_file_id,
+                    file_type=multi_file_type,
+                    context=multi_file_context,
+                    volume_id=multi_volume_id
+                )
+                
+                # 유사한 프로그램 검색
+                similar_programs = self.vector_db_service.search_similar_programs(
+                    query=multi_file_context,
+                    file_type=request_file_type,
+                    k=5
+                )
+                
+                # 유사한 프로그램의 ID 리스트 추출
+                similar_program_ids = [[program['fileId'], program['volumeId']] for program in similar_programs]
             
             return {
                 'command': 'response_workflows',
