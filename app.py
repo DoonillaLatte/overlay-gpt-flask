@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 from prompts.prompt_factory import PromptFactory
 import json
 import logging
@@ -53,19 +53,31 @@ def handle_disconnect():
 @socketio.on('message')
 def handle_message(message):
     try:
-        logger.info(f'Received message: {message}')
+        # 요청 시간과 횟수 추적
+        import datetime
+        request_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        logger.info(f'[{request_time}] ========== Flask 메시지 수신 시작 ==========')
+        logger.info(f'[{request_time}] Received message: {message}')
+        logger.info(f'[{request_time}] Message type: {type(message)}')
         
         if isinstance(message, str):
             message = json.loads(message)
             
-        logger.info(f'Processing message with command: {message.get("command")}')
+        logger.info(f'[{request_time}] Processing message with command: {message.get("command")}')
+        logger.info(f'[{request_time}] Chat ID: {message.get("chat_id")}')
+        logger.info(f'[{request_time}] Prompt: {message.get("prompt", "N/A")[:100]}...')  # 처음 100자만
         
         # CommandHandler를 통해 메시지 처리
         response = command_handler.handle_command(message)
-        logger.info(f'Generated response: {response}')
+        logger.info(f'[{request_time}] Generated response command: {response.get("command")}')
+        logger.info(f'[{request_time}] Response status: {response.get("status")}')
+        logger.info(f'[{request_time}] Response length: {len(str(response.get("message", "")))}')
         
-        socketio.emit('message_response', response)
-        logger.info("Message response sent successfully")
+        logger.info(f'[{request_time}] ========== Flask 응답 전송 시작 ==========')
+        
+        # 메시지를 보낸 클라이언트에게만 응답 (broadcast=False로 변경)
+        emit('message_response', response)
+        logger.info(f'[{request_time}] ========== Flask 응답 전송 완료 ==========')
             
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}", exc_info=True)
