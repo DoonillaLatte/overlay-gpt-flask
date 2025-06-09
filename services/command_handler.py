@@ -15,68 +15,6 @@ class CommandHandler:
         self.vector_db_service = vector_db_service
         self.prompt_factory = prompt_factory
 
-    def _convert_images_to_base64(self, html_content: str) -> str:
-        """
-        HTML 콘텐츠 내의 절대 경로 이미지를 Base64로 변환합니다.
-        
-        Args:
-            html_content (str): 변환할 HTML 콘텐츠
-            
-        Returns:
-            str: Base64로 변환된 HTML 콘텐츠
-        """
-        try:
-            # img 태그의 src 속성에서 절대 경로 찾기
-            img_pattern = r'<img[^>]*src=["\']([^"\']*)["\'][^>]*>'
-            
-            def replace_img_src(match):
-                img_tag = match.group(0)
-                src_path = match.group(1)
-                
-                # data: URL이나 http URL은 건드리지 않음
-                if src_path.startswith(('data:', 'http:', 'https:')):
-                    return img_tag
-                
-                # 절대 경로인지 확인
-                if os.path.isabs(src_path) and os.path.exists(src_path):
-                    try:
-                        # 파일 확장자에 따른 MIME 타입 결정
-                        ext = os.path.splitext(src_path)[1].lower()
-                        mime_type = {
-                            '.png': 'image/png',
-                            '.jpg': 'image/jpeg',
-                            '.jpeg': 'image/jpeg',
-                            '.gif': 'image/gif',
-                            '.bmp': 'image/bmp',
-                            '.webp': 'image/webp'
-                        }.get(ext, 'image/png')
-                        
-                        # 파일을 Base64로 인코딩
-                        with open(src_path, 'rb') as image_file:
-                            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-                        
-                        # Base64 데이터 URL로 교체
-                        base64_url = f'data:{mime_type};base64,{encoded_string}'
-                        new_img_tag = img_tag.replace(src_path, base64_url)
-                        
-                        logger.info(f"이미지 Base64 변환 완료: {src_path}")
-                        return new_img_tag
-                        
-                    except Exception as e:
-                        logger.error(f"이미지 Base64 변환 실패 ({src_path}): {str(e)}")
-                        return img_tag
-                
-                return img_tag
-            
-            # 모든 img 태그의 src 속성 변환
-            converted_html = re.sub(img_pattern, replace_img_src, html_content)
-            
-            return converted_html
-            
-        except Exception as e:
-            logger.error(f"HTML 이미지 변환 중 오류: {str(e)}")
-            return html_content
-
     def handle_command(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """
         메시지의 command에 따라 적절한 처리를 수행합니다.
@@ -178,9 +116,12 @@ class CommandHandler:
             response = html.unescape(response)
             logger.info(f"HTML 디코딩 후: {response}")
             
-            # 이미지 절대 경로를 Base64로 변환
-            response = self._convert_images_to_base64(response)
-            logger.info(f"이미지 Base64 변환 후 응답 길이: {len(response)}")
+            # 유니코드 이스케이프 시퀀스 디코딩
+            try:
+                response = response.encode('utf-8').decode('unicode_escape').encode('latin1').decode('utf-8')
+                logger.info(f"유니코드 디코딩 후: {response}")
+            except (UnicodeDecodeError, UnicodeEncodeError) as e:
+                logger.warning(f"유니코드 디코딩 실패, 원본 유지: {str(e)}")
             
             # 제목 생성
             title = None
