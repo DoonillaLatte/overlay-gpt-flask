@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "d3lOqPlL1CQ=",
+  "success": true,
+  "projectFilePath": "/Users/cuhun/Desktop/OverlayGPT/overlay-gpt-flask/test-client/test-client.csproj",
+  "expectedPackageFiles": [
+    "/Users/cuhun/.nuget/packages/socketio.core/3.1.2/socketio.core.3.1.2.nupkg.sha512",
+    "/Users/cuhun/.nuget/packages/socketio.serializer.core/3.1.2/socketio.serializer.core.3.1.2.nupkg.sha512",
+    "/Users/cuhun/.nuget/packages/socketio.serializer.systemtextjson/3.1.2/socketio.serializer.systemtextjson.3.1.2.nupkg.sha512",
+    "/Users/cuhun/.nuget/packages/socketioclient/3.1.2/socketioclient.3.1.2.nupkg.sha512",
+    "/Users/cuhun/.nuget/packages/system.text.encodings.web/8.0.0/system.text.encodings.web.8.0.0.nupkg.sha512",
+    "/Users/cuhun/.nuget/packages/system.text.json/8.0.4/system.text.json.8.0.4.nupkg.sha512",
+    "/Users/cuhun/.nuget/packages/microsoft.windowsdesktop.app.ref/9.0.3/microsoft.windowsdesktop.app.ref.9.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

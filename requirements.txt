@@ -1,0 +1,16 @@
+Flask==2.2.5
+Werkzeug==2.2.3
+Flask-SocketIO==5.3.6
+python-socketio==5.10.0
+python-engineio==4.8.0
+langchain==0.1.0
+langchain-openai==0.0.2
+python-dotenv==1.0.0
+pydantic==2.5.2
+faiss-cpu==1.7.4
+numpy==1.24.3
+python-json-logger==2.0.7
+huggingface-hub==0.12.1
+sentence-transformers==2.2.2
+pandas==2.1.4
+openpyxl==3.1.2
