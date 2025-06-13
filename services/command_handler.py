@@ -105,7 +105,7 @@ class CommandHandler:
                         # current_program이 있을 경우 vector DB에 저장 (text 타입 제외)
             if current_program and current_program.get('fileId') and current_program.get('context'):
                 current_file_type = current_program.get('fileType', '').lower()
-                if current_file_type != 'Text':  # text 타입은 vector DB 저장 안함
+                if current_file_type != 'text':  # text 타입은 vector DB 저장 안함
                     try:
                         self.vector_db_service.store_program_info(
                             file_id=current_program.get('fileId'),
@@ -139,9 +139,9 @@ class CommandHandler:
             # 파일 형식에 따른 예시 검색
             examples = []
             if current_program:
-                file_type = current_program.get('fileType')
+                file_type = current_program.get('fileType').lower()
                 # text 타입은 예시 검색하지 않음
-                if file_type and file_type != 'Text':
+                if file_type and file_type != 'text':
                     # 파일 형식에 맞는 예시 검색
                     similar_examples = self.vector_db_service.search_similar_programs(
                         query=f"fileType:{file_type}",
@@ -186,7 +186,7 @@ class CommandHandler:
             title = None
             title_file_type = 'word'  # 기본값으로 word 사용
             if current_program and current_program.get('fileType'):
-                current_file_type = current_program['fileType']
+                current_file_type = current_program['fileType'].lower()
                 # text 타입이면 target_program의 fileType 사용, 없으면 word
                 if current_file_type == 'text':
                     target_program = content.get('target_program', {})
