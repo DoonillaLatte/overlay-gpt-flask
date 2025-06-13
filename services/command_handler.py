@@ -79,7 +79,13 @@ class CommandHandler:
             
             current_program = content.get('current_program') or {}
             
-            if current_program and current_program.get('fileType') == 'Text':
+            # fileType을 안전하게 가져오고 소문자로 통일
+            current_file_type = ''
+            if current_program:
+                current_file_type = current_program.get('fileType', '').lower()
+            
+            # 전략 선택 로직
+            if current_file_type == 'text':
                 if content.get('target_program'):
                     strategy_name = "convert_for_text"
                 else:
@@ -98,14 +104,13 @@ class CommandHandler:
                         6: "freestyle_text"     #마크업 코드가 아닌 텍스트 형식의 리턴
                     }.get(content['request_type'], "freestyle")
             
-            logger.info(f"선택된 전략: {strategy_name}")
+            logger.info(f"선택된 전략: {strategy_name}, 현재 파일 타입: {current_file_type}")
             
             strategy = self.prompt_factory.get_strategy(strategy_name)
             
-                        # current_program이 있을 경우 vector DB에 저장 (text 타입 제외)
+            # current_program이 있을 경우 vector DB에 저장 (text 타입 제외)
             if current_program and current_program.get('fileId') and current_program.get('context'):
-                current_file_type = current_program.get('fileType', '').lower()
-                if current_file_type != 'Text':  # text 타입은 vector DB 저장 안함
+                if current_file_type != 'text':  # text 타입은 vector DB 저장 안함
                     try:
                         self.vector_db_service.store_program_info(
                             file_id=current_program.get('fileId'),
@@ -119,36 +124,34 @@ class CommandHandler:
                 else:
                     logger.info(f"Text 타입은 vector DB에 저장하지 않습니다 - FileType: {current_program.get('fileType')}")
 
-            #target_program이 있는 경우 vector DB에 저장 (text 타입 제외)
-            if content.get('target_program'):
-                target_file_type = content.get('target_program').get('fileType', '').lower()
-                if target_file_type != 'Text':  # Text 타입은 vector DB 저장 안함
+            # target_program이 있는 경우 vector DB에 저장 (text 타입 제외)
+            target_program = content.get('target_program')
+            if target_program:
+                target_file_type = target_program.get('fileType', '').lower()
+                if target_file_type != 'text':  # text 타입은 vector DB 저장 안함
                     try:
                         self.vector_db_service.store_program_info(
-                            file_id=content.get('target_program').get('fileId'),
-                            file_type=content.get('target_program').get('fileType'),
-                            context=content.get('target_program').get('context'),
-                            volume_id=content.get('target_program').get('volumeId')
+                            file_id=target_program.get('fileId'),
+                            file_type=target_program.get('fileType'),
+                            context=target_program.get('context'),
+                            volume_id=target_program.get('volumeId')
                         )
-                        logger.info(f"대상 프로그램 정보를 vector DB에 저장했습니다 - FileID: {content.get('target_program').get('fileId')}, FileType: {content.get('target_program').get('fileType')}")
+                        logger.info(f"대상 프로그램 정보를 vector DB에 저장했습니다 - FileID: {target_program.get('fileId')}, FileType: {target_program.get('fileType')}")
                     except Exception as e:
                         logger.warning(f"Vector DB 저장 실패 (계속 진행): {str(e)}")
                 else:
-                    logger.info(f"Target Text 타입은 vector DB에 저장하지 않습니다 - FileType: {content.get('target_program').get('fileType')}")
+                    logger.info(f"Target Text 타입은 vector DB에 저장하지 않습니다 - FileType: {target_program.get('fileType')}")
             
             # 파일 형식에 따른 예시 검색
             examples = []
-            if current_program:
-                file_type = current_program.get('fileType')
-                # text 타입은 예시 검색하지 않음
-                if file_type and file_type != 'Text':
-                    # 파일 형식에 맞는 예시 검색
-                    similar_examples = self.vector_db_service.search_similar_programs(
-                        query=f"fileType:{file_type}",
-                        file_type=file_type,
-                        k=3
-                    )
-                    examples = [example.get('context', '') for example in similar_examples]
+            if current_program and current_file_type and current_file_type != 'text':
+                # 파일 형식에 맞는 예시 검색
+                similar_examples = self.vector_db_service.search_similar_programs(
+                    query=f"fileType:{current_program.get('fileType')}",
+                    file_type=current_program.get('fileType'),
+                    k=3
+                )
+                examples = [example.get('context', '') for example in similar_examples]
             
             # 예시를 content에 추가
             content['examples'] = examples
@@ -178,21 +181,25 @@ class CommandHandler:
             # 원본 응답을 적용용으로 보관 (dotnet에서 사용)
             apply_message = response
             
-            # HTML 정규화 (Vue 표시용)
-            display_message = self._normalize_html_for_document(response, content.get('current_program', {}).get('fileType', 'unknown'))
+            # HTML 정규화 (Vue 표시용) - None 처리 개선
+            document_type = 'unknown'
+            if current_program and current_program.get('fileType'):
+                document_type = current_program.get('fileType')
+            display_message = self._normalize_html_for_document(response, document_type)
             logger.info(f"HTML 정규화 후 표시용 응답 길이: {len(display_message)}")
             
             # 제목 생성
             title = None
             title_file_type = 'word'  # 기본값으로 word 사용
             if current_program and current_program.get('fileType'):
-                current_file_type = current_program['fileType']
                 # text 타입이면 target_program의 fileType 사용, 없으면 word
                 if current_file_type == 'text':
-                    target_program = content.get('target_program', {})
-                    title_file_type = target_program.get('fileType', 'word')
+                    if target_program and target_program.get('fileType'):
+                        title_file_type = target_program.get('fileType')
+                    else:
+                        title_file_type = 'word'
                 else:
-                    title_file_type = current_file_type
+                    title_file_type = current_program.get('fileType')
                 
             vector_db = self.vector_db_service._get_db_by_type(title_file_type)
             title = vector_db._generate_title(content['prompt'])
