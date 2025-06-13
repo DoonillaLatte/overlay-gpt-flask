@@ -62,12 +62,20 @@ class ModifyTextPrompt():
             markup_type = "html"  # 기본값
             markup_instruction = ""
             
-            if file_type in ['word', 'excel']:
+            if file_type == 'word':
                 markup_type = "html"
                 markup_instruction = """
                 HTML 마크업 규칙:
                 1. 모든 태그는 올바르게 열리고 닫혀야 합니다.
-                2. Word/Excel 문서의 경우 <table>, <tr>, <td> 태그를 사용하여 표를 구성합니다.
+                2. 텍스트 서식은 <p>, <span>, <div> 등의 태그를 사용합니다.
+                3. 스타일은 style 속성을 통해 지정합니다.
+                """
+            elif file_type == 'excel':
+                markup_type = "html"
+                markup_instruction = """
+                HTML 마크업 규칙:
+                1. 모든 태그는 올바르게 열리고 닫혀야 합니다.
+                2. Excel 문서의 경우 <table>, <tr>, <td> 태그를 사용하여 표를 구성합니다.
                 3. 텍스트 서식은 <p>, <span>, <div> 등의 태그를 사용합니다.
                 4. 스타일은 style 속성을 통해 지정합니다.
                 """
