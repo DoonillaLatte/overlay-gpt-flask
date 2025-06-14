@@ -99,6 +99,9 @@ class VectorDatabase:
         벡터 데이터베이스를 디스크에 저장합니다.
         """
         try:
+            # 저장 디렉토리가 없으면 생성
+            os.makedirs(self.storage_dir, exist_ok=True)
+            
             # FAISS 인덱스 저장
             faiss.write_index(self.index, self.index_path)
             
@@ -161,18 +164,57 @@ class VectorDatabase:
         
         logger.info(f"가장 오래된 벡터가 삭제되었습니다. ID: {oldest_id}")
 
+    def _delete_and_rebuild(self, id_to_delete: int) -> None:
+        """
+        특정 ID를 삭제하고 FAISS 인덱스를 재구성합니다.
+        
+        Args:
+            id_to_delete (int): 삭제할 벡터 ID
+        """
+        # 메타데이터에서 삭제
+        if str(id_to_delete) in self.metadata_store:
+            del self.metadata_store[str(id_to_delete)]
+        
+        # FAISS 인덱스 재구성 (남은 벡터들로)
+        if len(self.metadata_store) > 0:
+            # 새로운 인덱스 생성
+            new_index = faiss.IndexFlatL2(self.dimension)
+            
+            # 남은 벡터들을 새 인덱스에 추가
+            for metadata_id in self.metadata_store.keys():
+                text = self.metadata_store[metadata_id]["text"]
+                title = self.metadata_store[metadata_id]["title"]
+                vector = self._get_embedding(title)
+                new_index.add(vector)
+            
+            # 기존 인덱스 교체
+            self.index = new_index
+        else:
+            # 모든 벡터가 삭제된 경우 새 인덱스 생성
+            self.index = faiss.IndexFlatL2(self.dimension)
+        
+        logger.info(f"벡터 ID {id_to_delete} 삭제 및 인덱스 재구성 완료")
+
     def store_vector(self, id: int, text: str, metadata: Dict[str, Any]) -> None:
         """
-        벡터를 저장합니다. 최대 저장 개수를 초과하면 가장 오래된 벡터를 삭제합니다.
+        벡터를 저장합니다. 동일한 ID가 있으면 업데이트하고, 최대 저장 개수를 초과하면 가장 오래된 벡터를 삭제합니다.
         
         Args:
             id (int): 벡터 ID
             text (str): 텍스트 데이터
             metadata (Dict[str, Any]): 메타데이터
         """
-        # 최대 저장 개수 확인
-        if len(self.metadata_store) >= self.max_vectors:
-            self._remove_oldest_vector()
+        # 기존 ID가 있는지 확인
+        is_update = str(id) in self.metadata_store
+        
+        if is_update:
+            # 업데이트의 경우: 기존 데이터 삭제 후 재구성
+            logger.info(f"기존 ID {id}를 업데이트합니다.")
+            self._delete_and_rebuild(id)
+        else:
+            # 새로운 저장의 경우: 최대 개수 확인
+            if len(self.metadata_store) >= self.max_vectors:
+                self._remove_oldest_vector()
         
         # 텍스트에서 제목 생성
         title = self._generate_title(text)
@@ -184,7 +226,7 @@ class VectorDatabase:
         self.index.add(vector)
         
         # 메타데이터 저장 (제목 정보 포함)
-        self.metadata_store[id] = {
+        self.metadata_store[str(id)] = {
             "text": text,
             "title": title,
             "metadata": metadata
@@ -192,6 +234,8 @@ class VectorDatabase:
         
         # 디스크에 저장
         self._save_to_disk()
+        
+        logger.info(f"벡터 {'업데이트' if is_update else '저장'} 완료: ID {id}")
         
     def get_vector(self, id: int) -> Dict[str, Any]:
         """
@@ -203,24 +247,30 @@ class VectorDatabase:
         Returns:
             Dict[str, Any]: 저장된 벡터 데이터
         """
-        if id not in self.metadata_store:
+        str_id = str(id)
+        if str_id not in self.metadata_store:
             raise KeyError(f"ID {id}에 해당하는 벡터가 존재하지 않습니다.")
             
-        return self.metadata_store[id]
+        return self.metadata_store[str_id]
         
     def delete_vector(self, id: int) -> None:
         """
-        벡터를 삭제합니다.
+        벡터를 삭제합니다. FAISS 인덱스도 함께 재구성합니다.
         
         Args:
             id (int): 벡터 ID
         """
-        if id not in self.metadata_store:
+        str_id = str(id)
+        if str_id not in self.metadata_store:
             raise KeyError(f"ID {id}에 해당하는 벡터가 존재하지 않습니다.")
             
-        del self.metadata_store[id]
+        # 삭제 및 인덱스 재구성
+        self._delete_and_rebuild(id)
+        
         # 디스크에 저장
         self._save_to_disk()
+        
+        logger.info(f"벡터 삭제 완료: ID {id}")
         
     def search_similar(self, query: str, k: int = 5) -> list:
         """

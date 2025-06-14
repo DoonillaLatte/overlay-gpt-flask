@@ -67,19 +67,24 @@ class VectorDBService:
                 
             vector_db = self._get_db_by_type(file_type)
             
-            # 동일한 file_id가 있는지 확인하고 있다면 삭제
+            # 동일한 file_id가 있는지 확인 (더 안전한 방식)
+            existing_data = None
+            is_update = False
             try:
                 existing_data = vector_db.get_vector(file_id)
-                vector_db.delete_vector(file_id)
-                logger.info(f"기존 파일 정보가 삭제되었습니다. Type: {file_type}, ID: {file_id}")
-                logger.debug(f"삭제된 기존 데이터: {json.dumps(existing_data, ensure_ascii=False)}")
-            except:
-                pass  # 기존 데이터가 없는 경우 무시
+                is_update = True
+                logger.info(f"기존 파일 정보를 발견했습니다. Type: {file_type}, ID: {file_id}")
+                logger.debug(f"기존 데이터: {json.dumps(existing_data, ensure_ascii=False)}")
+            except KeyError:
+                logger.info(f"새로운 파일 정보를 저장합니다. Type: {file_type}, ID: {file_id}")
+            except Exception as e:
+                logger.warning(f"기존 데이터 확인 중 예상치 못한 오류: {str(e)}")
+                # 예상치 못한 오류의 경우에도 계속 진행
             
             # 프로그램 정보를 벡터로 변환
             program_info = f"{file_type} {context}"
             
-            # 벡터 데이터베이스에 저장
+            # 벡터 데이터베이스에 저장 (store_vector가 자동으로 업데이트 처리)
             vector_db.store_vector(
                 id=file_id,  
                 text=program_info,
@@ -91,8 +96,9 @@ class VectorDBService:
                 }
             )
             
-            logger.info(f"파일 정보가 벡터 DB에 저장되었습니다. Type: {file_type}, ID: {file_id}")
-            logger.debug(f"저장된 데이터: {json.dumps({'text': program_info, 'metadata': {'type': file_type, 'context': context, 'fileId': file_id, 'volumeId': volume_id}}, ensure_ascii=False)}")
+            action = "업데이트" if is_update else "저장"
+            logger.info(f"파일 정보가 벡터 DB에 {action}되었습니다. Type: {file_type}, ID: {file_id}")
+            logger.debug(f"{action}된 데이터: {json.dumps({'text': program_info, 'metadata': {'type': file_type, 'context': context, 'fileId': file_id, 'volumeId': volume_id}}, ensure_ascii=False)}")
             
         except Exception as e:
             logger.error(f"벡터 DB 저장 중 오류 발생: {str(e)}")
