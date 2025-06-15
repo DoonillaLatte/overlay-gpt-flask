@@ -24,7 +24,15 @@ class FreestyleTextPrompt():
         """
         
         self.user_input = user_input
-        self.prefix = prefix or "다음 요청에 맞는 텍스트를 작성해주세요:" 
+        self.prefix = prefix or """
+        주어진 파일의 형식의 HTML 코드를 분석하여, 프롬프트 요구를 충족하도록 HTML코드를 작성 후 출력해주세요. 
+        내용 추가, 내용 수정, 내용 삭제 등 프롬프트 요구에 맞추어 내용을 작성해주세요.
+        추가되는 경우는 원본 파일의 내용을 생략한 답변을 작성해서는 안됩니다.
+        수정되는 경우는 원본 파일의 내용을 생략하지 않고 수정해주세요.
+        출력되는 내용은 반드시 HTML 마크업 형식이어야 합니다.
+        제목은 생략하고 내용만 출력해주세요.
+        """
+         
         self.logger = logging.getLogger(__name__)
 
     def generate_prompt(self, request_data: Dict[str, Any]) -> str:
