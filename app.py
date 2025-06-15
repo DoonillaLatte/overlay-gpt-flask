@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from services.vector_db_service import VectorDBService
 from services.command_handler import CommandHandler
 from prompts.strategies.memory_manager import MemoryManager
+from config_loader import config
 
 # 로깅 설정
 logging.basicConfig(
@@ -94,5 +95,22 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
+    # 설정 검증
+    if not config.is_api_key_valid():
+        logger.error("❌ OpenAI API 키가 올바르지 않습니다!")
+        logger.error("설치 프로그램에서 입력한 API 키를 확인해주세요.")
+        logger.error("또는 config.json 파일에서 직접 설정할 수 있습니다.")
+        input("계속하려면 Enter를 누르세요...")
+    else:
+        logger.info("✅ OpenAI API 키가 설정되었습니다.")
+    
     logger.info("Starting Flask application...")
-    socketio.run(app, debug=True, port=5001, host='0.0.0.0')
+    
+    # 설정에서 포트 가져오기
+    port = config.get_flask_port()
+    debug_mode = config.get_flask_env() == 'development'
+    
+    logger.info(f"서버 포트: {port}")
+    logger.info(f"디버그 모드: {debug_mode}")
+    
+    socketio.run(app, debug=debug_mode, port=port, host='0.0.0.0')

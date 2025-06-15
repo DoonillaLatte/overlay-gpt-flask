@@ -72,6 +72,7 @@ class ConvertForTextPrompt():
                 2. Word/Excel 문서의 경우 <table>, <tr>, <td> 태그를 사용하여 표를 구성합니다.
                 3. 텍스트 서식은 <p>, <span>, <div> 등의 태그를 사용합니다.
                 4. 스타일은 style 속성을 통해 지정합니다.
+                5. 수식은 xml마크업 방식으로 작성합니다.
                 """
             elif target_file_type == 'hwp':
                 markup_type = "xml"
@@ -82,6 +83,7 @@ class ConvertForTextPrompt():
                 3. <PARA> 태그로 문단을 구분합니다.
                 4. <TEXT> 태그로 텍스트 내용을 포함합니다.
                 5. 모든 태그는 올바른 네임스페이스를 사용해야 합니다.
+                6. 수식은 xml마크업 방식으로 작성합니다.
                 """
             elif target_file_type == 'ppt':
                 markup_type = "html"
@@ -103,6 +105,7 @@ class ConvertForTextPrompt():
                 ```css
                 - 배경색: background-color: rgba(r, g, b, alpha)
                 - 하이라이트: background-color: rgb(r, g, b)
+                - 수식: <m:oMath>
                 ```
 
                 ## 2. 정렬 스타일
@@ -112,6 +115,7 @@ class ConvertForTextPrompt():
                 - center: justify-content: center
                 - right: justify-content: flex-end
                 - left: justify-content: flex-start
+                - 수식: <m:oMath>
                 ```
 
                 ### 수직 정렬
@@ -119,6 +123,7 @@ class ConvertForTextPrompt():
                 - middle: align-items: center
                 - bottom: align-items: flex-end
                 - top: align-items: flex-start
+                - 수식: <m:oMath>
                 ```
 
                 ## 3. 도형 스타일
@@ -129,6 +134,7 @@ class ConvertForTextPrompt():
                 - 좌표: left: [x]px, top: [y]px
                 - 크기: width: [width]px, height: [height]px
                 - 회전: transform: rotate([angle]deg)
+                - 수식: <m:oMath>
                 ```
 
                 ### 테두리와 효과
@@ -137,6 +143,7 @@ class ConvertForTextPrompt():
                 - 그림자: box-shadow: [x]px [y]px [blur]px rgba(r,g,b,alpha)
                 - 모서리 둥글기: border-radius: [radius]px
                 - Z-인덱스: z-index: [position]
+                - 수식: <m:oMath>
                 ```
 
                 ## 4. HTML 태그 변환
@@ -151,6 +158,7 @@ class ConvertForTextPrompt():
                 - 차트: <div>
                 - 표: <table>
                 - SmartArt: <div>
+                - 수식: <m:oMath>
                 ```
 
                 ### 이미지 처리
@@ -159,6 +167,7 @@ class ConvertForTextPrompt():
                 - 저장 위치: [프로그램경로]/images/
                 - 파일명: [GUID].png
                 - 참조 방식: 절대 경로 사용
+                - 수식: <m:oMath>
                 ```
 
                 ## 5. 특수 효과
@@ -168,11 +177,13 @@ class ConvertForTextPrompt():
                 - transform-style: preserve-3d
                 - perspective: 1000px
                 - transform: rotateX() rotateY()
+                - 수식: <m:oMath>
                 ```
 
                 ### 그라데이션
                 ```css
                 - background: linear-gradient(direction, color-stops)
+                - 수식: <m:oMath>
                 ```
 
                 ## 6. 변환 처리 메서드
@@ -202,6 +213,16 @@ class ConvertForTextPrompt():
                 <div style='position: absolute; left: 200px; top: 250px; width: 150px; height: 150px; background-color: rgba(255, 255, 255, 0.8); border-radius: 10px;'>
                     <span style='font-size: 16pt;'>내용</span>
                 </div>
+                <m:oMath>
+                    <m:r>
+                        <m:rPr>
+                            <m:rFonts m:ascii="맑은 고딕" m:hAnsi="맑은 고딕" />
+                            <m:color m:val="000000" />
+                            <m:sz m:val="2400" />
+                        </m:rPr>
+                        <m:t>내용</m:t>
+                    </m:r>
+                </m:oMath>
                 ```
 
                 ### 전체 슬라이드 HTML 구조(이 때는 각 슬라이드 페이지를 감싸는 div가 있음)
